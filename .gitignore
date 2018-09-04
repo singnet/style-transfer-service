@@ -1,0 +1,6 @@
+StyleTransfer.ipynb
+core
+.ipynb_checkpoints/
+dnn_models/
+db_style_transfer_service.db
+

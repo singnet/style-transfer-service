@@ -1,0 +1,29 @@
+{
+    "name": "style_transfer_service",
+    "model": "model/",
+    "organization": "SNET_Brazil",
+    "path": "",
+    "price": 0,
+    "endpoint": "http://54.203.198.53:7021",
+    "tags": [
+        "Neural",
+        "Artistic",
+        "Style",
+        "Transfer",
+        "Neural",
+        "Networks",
+        "Deep",
+        "Learning",
+        "Fun",
+        "Free",
+        "VGG"
+    ],
+    "metadata": {
+        "description": "Transfers the style of an image to another."
+    },
+    "networks": {
+        "42": {
+            "agentAddress": "0x34c7bBcBA4E4c0C37551dd8fF60c2D984b8c91e1"
+        }
+    }
+}
