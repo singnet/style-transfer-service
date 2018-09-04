@@ -6,8 +6,8 @@
 
 > Repository for the style transfer service on the SingularityNET.
 
-[![Github Issues](http://githubbadges.herokuapp.com/badges/badgerbadgerbadger/issues.svg?style=flat-square)](https://github.com/singnet/style-transfer-service/issues/) 
-[![Pending Pull-Requests](http://githubbadges.herokuapp.com/badges/badgerbadgerbadger/pulls.svg?style=flat-square)](https://github.com/singnet/style-transfer-service/pulls) 
+[![Github Issues](http://githubbadges.herokuapp.com/singnet/style-transfer-service/issues.svg?style=flat-square)](https://github.com/singnet/style-transfer-service/issues/) 
+[![Pending Pull-Requests](http://githubbadges.herokuapp.com/singnet/style-transfer-service/pulls.svg?style=flat-square)](https://github.com/singnet/style-transfer-service/pulls) 
 [![GitHub license](https://img.shields.io/github/license/Naereen/StrapDown.js.svg)](https://github.com/Naereen/StrapDown.js/blob/master/LICENSE)
 
 This service uses convolutional neural networks to transfer the style of an image to another. Specifically, we're using a VGG model pre-trained on the ImageNet data (available at [https://cntk.ai/jup/models/vgg16_weights.bin](https://cntk.ai/jup/models/vgg16_weights.bin) ) to transfer the style of a _style image_ to a _content image_. 
