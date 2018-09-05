@@ -186,27 +186,30 @@ class style_transfer_model:
     
     def _load_image(self, path):
         """Loads an image from the given path."""
-        with Image.open(path) as pic:
-
-            # Checks if image is PNG, convert to JPG is needed
-            if pic.format == 'PNG':
-                with BytesIO() as f:
-                    pic.save(f, format='JPEG')
-                    f.seek(0)
-                    pic = Image.open(f)
-                    hw = pic.size[0] / 2
-                    hh = pic.size[1] / 2
-                    mh = min(hw,hh)
-                    cropped = pic.crop((hw - mh, hh - mh, hw + mh, hh + mh))
-                    array = np.array(cropped.resize((self.SIZE, self.SIZE), Image.BICUBIC), dtype=np.float32)
-                    return np.ascontiguousarray(np.transpose(array, (2,0,1))) - self.SHIFT
-            else:
+        #with Image.open(path) as pic:
+        pic = Image.open(path)
+        
+        # Checks if image is PNG, convert to JPG is needed
+        if pic.format == 'PNG':
+            with BytesIO() as f:
+                pic.save(f, format='JPEG')
+                f.seek(0)
+                pic = Image.open(f)
                 hw = pic.size[0] / 2
                 hh = pic.size[1] / 2
                 mh = min(hw,hh)
                 cropped = pic.crop((hw - mh, hh - mh, hw + mh, hh + mh))
-                array = np.array(cropped.resize((self.SIZE, self.SIZE), Image.BICUBIC), dtype=np.float32)
-            return np.ascontiguousarray(np.transpose(array, (2,0,1))) - self.SHIFT
+                array = np.array(cropped.resize((self.SIZE, self.SIZE), Image.BICUBIC), 
+                                 dtype=np.float32)
+                return np.ascontiguousarray(np.transpose(array, (2,0,1))) - self.SHIFT
+        else:
+            hw = pic.size[0] / 2
+            hh = pic.size[1] / 2
+            mh = min(hw,hh)
+            cropped = pic.crop((hw - mh, hh - mh, hw + mh, hh + mh))
+            array = np.array(cropped.resize((self.SIZE, self.SIZE), Image.BICUBIC), 
+                             dtype=np.float32)
+        return np.ascontiguousarray(np.transpose(array, (2,0,1))) - self.SHIFT
 
     def _load_images(self, content_path, style_path):
         """Loads images or download them if they are not available locally."""
@@ -306,3 +309,4 @@ class style_transfer_model:
         self._clear_images()
         
         return output_image
+    
