@@ -1,5 +1,7 @@
 from __future__ import print_function
 
+from urllib.parse import urlparse
+import logging
 import numpy as np
 from scipy import optimize as opt
 import cntk as C
@@ -15,7 +17,12 @@ import cntk.tests.test_utils
 cntk.tests.test_utils.set_device_from_pytest_env() # (only needed for our build system)
 C.cntk_py.set_fixed_random_seed(1) # fix a random seed for CNTK components
 
+logging.basicConfig(
+    level=10, format="%(asctime)s - [%(levelname)8s] - %(name)s - %(message)s")
+log = logging.getLogger(os.path.basename(__file__))
+
 def download(url, filename):
+    """Downloads a file given its url."""
     response = requests.get(url, stream=True)
     with open(filename, 'wb') as handle:
         for data in response.iter_content(chunk_size=2**20):
@@ -186,8 +193,11 @@ class style_transfer_model:
     
     def _load_image(self, path):
         """Loads an image from the given path."""
-        #with Image.open(path) as pic:
-        pic = Image.open(path)
+        try:
+            pic = Image.open(path)
+        except Exception:
+            log.exception()
+            raise
         
         # Checks if image is PNG, convert to JPG is needed
         if pic.format == 'PNG':
@@ -213,14 +223,34 @@ class style_transfer_model:
 
     def _load_images(self, content_path, style_path):
         """Loads images or download them if they are not available locally."""
-        content_img = content_path
-        style_img = style_path
-        if not os.path.exists(content_path):
+        if urlparse(content_path).scheme in ('http', 'https'):
             download('%s' % content_path, self.TEMP_IMAGES['content'])
             content_img = self.TEMP_IMAGES['content']
-        if not os.path.exists(style_path):
+        elif os.path.exists(content_path):
+            content_img = content_path
+        else:
+            error_msg = "Wrong content image path! Make sure its a valid 'http'/'https' url or local reference."
+            log.error(error_msg, exc_info = True)
+            raise FileExistsError(error_msg)
+
+        
+        if urlparse(style_path).scheme in ('http', 'https'):
             download('%s' % style_path, self.TEMP_IMAGES['style'])
             style_img = self.TEMP_IMAGES['style']
+        elif os.path.exists(style_path):
+            style_img = style_path
+        else:
+            error_msg = "Wrong style image path! Make sure its a valid 'http'/'https' url or local reference."
+            log.error(error_msg, exc_info = True)
+            raise FileExistsError(error_msg)
+        
+#         if not os.path.exists(content_path):
+#             download('%s' % content_path, self.TEMP_IMAGES['content'])
+#             content_img = self.TEMP_IMAGES['content']
+#         if not os.path.exists(style_path):
+#             download('%s' % style_path, self.TEMP_IMAGES['style'])
+#             style_img = self.TEMP_IMAGES['style']
+        
         # Load the images
         content = self._load_image(content_img)
         style   = self._load_image(style_img)

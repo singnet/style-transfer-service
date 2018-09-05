@@ -1,5 +1,6 @@
 import sys
 import logging
+import os 
 
 import grpc
 import concurrent.futures as futures
@@ -14,7 +15,7 @@ from service.model.style_transfer_rpc_pb2 import image
 
 logging.basicConfig(
     level=10, format="%(asctime)s - [%(levelname)8s] - %(name)s - %(message)s")
-log = logging.getLogger('style_transfer')
+log = logging.getLogger(os.path.basename(__file__))
 
 
 '''
