@@ -1,5 +1,7 @@
 from __future__ import print_function
 
+from urllib.parse import urlparse
+import logging
 import numpy as np
 from scipy import optimize as opt
 import cntk as C
@@ -15,7 +17,12 @@ import cntk.tests.test_utils
 cntk.tests.test_utils.set_device_from_pytest_env() # (only needed for our build system)
 C.cntk_py.set_fixed_random_seed(1) # fix a random seed for CNTK components
 
+logging.basicConfig(
+    level=10, format="%(asctime)s - [%(levelname)8s] - %(name)s - %(message)s")
+log = logging.getLogger(os.path.basename(__file__))
+
 def download(url, filename):
+    """Downloads a file given its url."""
     response = requests.get(url, stream=True)
     with open(filename, 'wb') as handle:
         for data in response.iter_content(chunk_size=2**20):
@@ -43,6 +50,7 @@ class style_transfer_model:
         self.TEMP_IMAGES = {}
         self.TEMP_IMAGES['content'] = 'images/content_temp.jpg'
         self.TEMP_IMAGES['style'] = 'images/style_temp.jpg'
+        self.TEMP_IMAGES['output'] = 'images/output_temp.jpg'
 
         # Image shift parameters
         self.SHIFT = np.reshape([103.939, 116.779, 123.68], (3, 1, 1)).astype('f')
@@ -186,38 +194,64 @@ class style_transfer_model:
     
     def _load_image(self, path):
         """Loads an image from the given path."""
-        with Image.open(path) as pic:
-
-            # Checks if image is PNG, convert to JPG is needed
-            if pic.format == 'PNG':
-                with BytesIO() as f:
-                    pic.save(f, format='JPEG')
-                    f.seek(0)
-                    pic = Image.open(f)
-                    hw = pic.size[0] / 2
-                    hh = pic.size[1] / 2
-                    mh = min(hw,hh)
-                    cropped = pic.crop((hw - mh, hh - mh, hw + mh, hh + mh))
-                    array = np.array(cropped.resize((self.SIZE, self.SIZE), Image.BICUBIC), dtype=np.float32)
-                    return np.ascontiguousarray(np.transpose(array, (2,0,1))) - self.SHIFT
-            else:
+        try:
+            pic = Image.open(path)
+        except Exception:
+            log.exception()
+            raise
+        
+        # Checks if image is PNG, convert to JPG is needed
+        if pic.format == 'PNG':
+            with BytesIO() as f:
+                pic.save(f, format='JPEG')
+                f.seek(0)
+                pic = Image.open(f)
                 hw = pic.size[0] / 2
                 hh = pic.size[1] / 2
                 mh = min(hw,hh)
                 cropped = pic.crop((hw - mh, hh - mh, hw + mh, hh + mh))
-                array = np.array(cropped.resize((self.SIZE, self.SIZE), Image.BICUBIC), dtype=np.float32)
-            return np.ascontiguousarray(np.transpose(array, (2,0,1))) - self.SHIFT
+                array = np.array(cropped.resize((self.SIZE, self.SIZE), Image.BICUBIC), 
+                                 dtype=np.float32)
+                return np.ascontiguousarray(np.transpose(array, (2,0,1))) - self.SHIFT
+        else:
+            hw = pic.size[0] / 2
+            hh = pic.size[1] / 2
+            mh = min(hw,hh)
+            cropped = pic.crop((hw - mh, hh - mh, hw + mh, hh + mh))
+            array = np.array(cropped.resize((self.SIZE, self.SIZE), Image.BICUBIC), 
+                             dtype=np.float32)
+        return np.ascontiguousarray(np.transpose(array, (2,0,1))) - self.SHIFT
 
     def _load_images(self, content_path, style_path):
         """Loads images or download them if they are not available locally."""
-        content_img = content_path
-        style_img = style_path
-        if not os.path.exists(content_path):
+        if urlparse(content_path).scheme in ('http', 'https'):
             download('%s' % content_path, self.TEMP_IMAGES['content'])
             content_img = self.TEMP_IMAGES['content']
-        if not os.path.exists(style_path):
+        elif os.path.exists(content_path):
+            content_img = content_path
+        else:
+            error_msg = "Wrong content image path! Make sure its a valid 'http'/'https' url or local reference."
+            log.error(error_msg, exc_info = True)
+            raise FileExistsError(error_msg)
+
+        
+        if urlparse(style_path).scheme in ('http', 'https'):
             download('%s' % style_path, self.TEMP_IMAGES['style'])
             style_img = self.TEMP_IMAGES['style']
+        elif os.path.exists(style_path):
+            style_img = style_path
+        else:
+            error_msg = "Wrong style image path! Make sure its a valid 'http'/'https' url or local reference."
+            log.error(error_msg, exc_info = True)
+            raise FileExistsError(error_msg)
+        
+#         if not os.path.exists(content_path):
+#             download('%s' % content_path, self.TEMP_IMAGES['content'])
+#             content_img = self.TEMP_IMAGES['content']
+#         if not os.path.exists(style_path):
+#             download('%s' % style_path, self.TEMP_IMAGES['style'])
+#             style_img = self.TEMP_IMAGES['style']
+        
         # Load the images
         content = self._load_image(content_img)
         style   = self._load_image(style_img)
@@ -262,7 +296,7 @@ class style_transfer_model:
     def print_image(img):
         """Prints the image on the screen."""
         plt.imshow(img)
-    
+
     @staticmethod
     def img_to_base64(ndarrayimg):
         """Base64 encoding for an image (actually a numpy.ndarray)."""
@@ -277,6 +311,36 @@ class style_transfer_model:
         ndarrayimg = np.frombuffer(base64string, dtype=np.uint8).reshape(size, size, 3)
         return ndarrayimg
     
+    def npimg_to_base64jpg(self, img):
+        """Converts a numpy.ndarray image to a base64 encoded .jpg image."""
+        pil_img = Image.fromarray(img)
+        pil_img.save(self.TEMP_IMAGES['output'], 'JPEG')
+        with open(self.TEMP_IMAGES['output'], "rb") as image_file:
+            base64jpg = base64.b64encode(image_file.read())
+            
+            # Deletes temp image
+            try:
+                os.remove(self.TEMP_IMAGES['output'])
+            except OSError as e: # this would be "except OSError, e:" before Python 2.6
+                if e.errno != errno.ENOENT: # errno.ENOENT = no such file or directory
+                    raise # re-raise exception if a different error occurred
+                    
+            return base64jpg
+    
+    @staticmethod
+    def base64jpg_to_npimg(base64jpg):
+        """Converts a base64 encoded image to a numpy.ndarray image."""
+        try:
+            pic = Image.open(BytesIO(base64.b64decode(base64jpg)))
+        except Exception:
+            log.exception()
+            raise
+        
+        npimg = np.asarray(pic)
+        return npimg 
+
+
+        
     def transfer_style(self, 
                        content_image_path, 
                        style_image_path,
@@ -306,3 +370,4 @@ class style_transfer_model:
         self._clear_images()
         
         return output_image
+    
