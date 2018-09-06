@@ -50,6 +50,7 @@ class style_transfer_model:
         self.TEMP_IMAGES = {}
         self.TEMP_IMAGES['content'] = 'images/content_temp.jpg'
         self.TEMP_IMAGES['style'] = 'images/style_temp.jpg'
+        self.TEMP_IMAGES['output'] = 'images/output_temp.jpg'
 
         # Image shift parameters
         self.SHIFT = np.reshape([103.939, 116.779, 123.68], (3, 1, 1)).astype('f')
@@ -295,7 +296,7 @@ class style_transfer_model:
     def print_image(img):
         """Prints the image on the screen."""
         plt.imshow(img)
-    
+
     @staticmethod
     def img_to_base64(ndarrayimg):
         """Base64 encoding for an image (actually a numpy.ndarray)."""
@@ -310,6 +311,36 @@ class style_transfer_model:
         ndarrayimg = np.frombuffer(base64string, dtype=np.uint8).reshape(size, size, 3)
         return ndarrayimg
     
+    def npimg_to_base64jpg(self, img):
+        """Converts a numpy.ndarray image to a base64 encoded .jpg image."""
+        pil_img = Image.fromarray(img)
+        pil_img.save(self.TEMP_IMAGES['output'], 'JPEG')
+        with open(self.TEMP_IMAGES['output'], "rb") as image_file:
+            base64jpg = base64.b64encode(image_file.read())
+            
+            # Deletes temp image
+            try:
+                os.remove(self.TEMP_IMAGES['output'])
+            except OSError as e: # this would be "except OSError, e:" before Python 2.6
+                if e.errno != errno.ENOENT: # errno.ENOENT = no such file or directory
+                    raise # re-raise exception if a different error occurred
+                    
+            return base64jpg
+    
+    @staticmethod
+    def base64jpg_to_npimg(base64jpg):
+        """Converts a base64 encoded image to a numpy.ndarray image."""
+        try:
+            pic = Image.open(BytesIO(base64.b64decode(base64jpg)))
+        except Exception:
+            log.exception()
+            raise
+        
+        npimg = np.asarray(pic)
+        return npimg 
+
+
+        
     def transfer_style(self, 
                        content_image_path, 
                        style_image_path,

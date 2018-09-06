@@ -104,9 +104,9 @@ class StyleTransferServicer(style_transfer_rpc_pb2_grpc.StyleTransferServicer):
         # Creates an image() object (from .proto file) to respond
         self.output_image = image()
         self.output_image.size = self.output_image_size
-        self.output_image.data = style_transfer.style_transfer_model.img_to_base64(output_img)
-        
-        log.debug('transfer_style({},{})=success'.format(self.content_path, self.style_path))
+        #self.output_image.data = style_transfer.style_transfer_model.img_to_base64(output_img)
+        self.output_image.data = st_model.npimg_to_base64jpg(output_img)
+        log.debug('Style transfer successful!')
         return self.output_image
 
 # The gRPC serve function.
