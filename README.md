@@ -103,7 +103,7 @@ To run a copy of this code, please fork the repository, open a terminal, navigat
 python3.5 run_style_transfer.py --daemon-config config/
 ```
 
-Make sure to change the JSON configuration file [config/snetd_style_transfer_service.json](./config/snetd_style_transfer_service.json) to match the communication ports for your system. The same ports are also referenced in the [service/__init__.py](./service/__init__.py) file.
+Make sure to change the JSON configuration file [config/snetd_style_transfer_service.json](./config/snetd_style_transfer_service.json) to match the communication ports for your system. The same ports are also referenced in the [service/\_\_init\_\_.py](./service/__init__.py) file.
 
 Also, make sure that your system meets the [requirements](./service/requirements.txt).
 
