@@ -14,7 +14,7 @@ This service uses convolutional neural networks to transfer the style of a "styl
 
 This repository was forked from [xunhuang1995/AdaIN-style](https://github.com/xunhuang1995/AdaIN-style). The original code is written in Lua (using torch). It has been integrated into the SingularityNET using Python 3.6.
 
-Usage informatio will be updated once the user interface is tested with SNET's dAPP (+gRPC). For now, it can be called via terminal:
+Usage information will be updated once the user interface is tested with SNET's dAPP (+gRPC). For now, it can be called via terminal:
 
 >snet client call transfer_image_style '{"content":"input/content/cornell.jpg", "style":"input/style/woman_with_hat_matisse.jpg"}'
 
