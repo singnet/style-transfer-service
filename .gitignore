@@ -18,4 +18,5 @@ videos/
 .idea/
 service/__pycache__/
 service/service_spec/__pycache__/
-examples/videoutput/*
+examples/videoutput/
+
