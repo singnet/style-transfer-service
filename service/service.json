@@ -1,29 +1,27 @@
 {
-    "name": "style_transfer_service",
-    "model": "model/",
-    "organization": "SNET_Brazil",
+    "name": "StyleTransfer",
+    "service_spec": "service_spec/",
+    "organization": "SNET",
     "path": "",
     "price": 0,
-    "endpoint": "http://54.203.198.53:7021",
+    "endpoint": "http://54.203.198.53:7028",
     "tags": [
-        "Neural",
-        "Artistic",
-        "Style",
-        "Transfer",
-        "Neural",
-        "Networks",
-        "Deep",
-        "Learning",
-        "Fun",
-        "Free",
-        "VGG"
+        "neural",
+        "artistic",
+        "style",
+        "transfer",
+        "deep",
+        "learning",
+        "fun",
+        "application",
+        "image"
     ],
     "metadata": {
-        "description": "Transfers the style of an image to another."
+        "description": "Transfers the artistic style of an image to another using deep learning."
     },
     "networks": {
         "42": {
-            "agentAddress": "0x34c7bBcBA4E4c0C37551dd8fF60c2D984b8c91e1"
+            "agentAddress": "0xF40405EBdcca2D9163285fD174fBd23E8AB8A0E4"
         }
     }
 }

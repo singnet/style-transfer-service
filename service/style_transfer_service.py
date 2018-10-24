@@ -1,134 +1,170 @@
-import sys
 import logging
-import os 
-
 import grpc
+import service
+import service.service_spec.style_transfer_pb2_grpc as grpc_bt_grpc
+from service.service_spec.style_transfer_pb2 import Image
+import subprocess
 import concurrent.futures as futures
-
-from service import default_args
-import service.common
-import service.style_transfer as style_transfer
-
-# Importing the generated codes from buildproto.sh
-import service.model.style_transfer_rpc_pb2_grpc as style_transfer_rpc_pb2_grpc
-from service.model.style_transfer_rpc_pb2 import image
+import sys
 
 logging.basicConfig(
-    level=10, format="%(asctime)s - [%(levelname)8s] - %(name)s - %(message)s")
-log = logging.getLogger(os.path.basename(__file__))
+    level=10, format="%(asctime)s - [%(levelname)8s] - %(name)s - %(message)s"
+)
+log = logging.getLogger("image_recon_service")
 
 
-'''
-Neural Artistic Style Transfer Service. To use this service please provide
-
-e.g:
-With dApp:  'method': mul
-            'params': {"a": 12.0, "b": 77.0}
-Resulting:  response:
-                value: 924.0
-
-
-Full snet-cli cmd:
-$ snet client call mul '{"a":12.0, "b":77.0}'
-
-Result:
-(Transaction info)
-Signing job...
-
-Read call params from cmdline...
-
-Calling service...
-
-    response:
-        value: 924.0
-'''
-
-
-# Create a class to be added to the gRPC server
-# derived from the protobuf codes.
-class StyleTransferServicer(style_transfer_rpc_pb2_grpc.StyleTransferServicer):
+class StyleTransferServicer(grpc_bt_grpc.StyleTransferServicer):
+    """Style transfer servicer class to be added to the gRPC stub.
+    Derived from protobuf (auto-generated) class."""
 
     def __init__(self):
-        # Just for debugging purpose.
-        log.debug("StyleTransferServicer created")
-        
-        # Default input values
-        self.output_image_size =  300
-        self.start_from_random = False
-        self.optimization_rounds = 10
-        self.optimization_iterations = 10
+        log.debug("StyleTransferServicer created!")
+        self.result = "Fail"
+        self.required_arguments = ['content', 'style']
+        self.temp_dir = "./temp/"
+        self.saveExt = 'jpg'
+        self.output_image_prefix = "outputimage_"
+        # Store the names of the images to delete them afterwards
+        self.created_images = []
 
-    # The method that will be exposed to the snet-cli call command.
-    # request: incoming data
-    # context: object that provides RPC-specific information (timeout, etc).
-    def transfer_style(self, request, context):
-        
-        def dump_object(obj):
-            for descriptor in obj.DESCRIPTOR.fields:
-                value = getattr(obj, descriptor.name)
-                if descriptor.type == descriptor.TYPE_MESSAGE:
-                    if descriptor.label == descriptor.LABEL_REPEATED:
-                        map(dump_object, value)
-                    else:
-                        dump_object(value)
-                elif descriptor.type == descriptor.TYPE_ENUM:
-                    enum_name = descriptor.enum_type.values[value].name
-                    print ("{}: {}".format(descriptor.full_name, enum_name))
+    def treat_inputs(self, base_command, request, arguments):
+        """Treats gRPC inputs and assembles lua command. Specifically, checks if required field have been specified,
+        if the values and types are correct and, for each input/input_type adds the argument to the lua command."""
+
+        # Base command is the prefix of the command (e.g.: 'th test.lua ')
+        file_index_str = ""
+        command = base_command
+        for field, values in arguments.items():
+            var_type = values[0]
+            # required = values[1] Not being used now but required for future automation steps
+            default = values[2]
+
+            # Tries to retrieve argument from gRPC request
+            try:
+                arg_value = eval("request.{}".format(field))
+            except Exception as e:  # AttributeError if trying to access a field that hasn't been specified.
+                log.error(e)
+                return False
+
+            print("Received request.{} = ".format(field))
+            print(arg_value)
+
+            # Deals with each field (or field type) separately. This is very specific to the lua command required.
+            # If fields
+            if field == "content":
+                assert(request.content != ""), "Content image path should not be empty."
+                image_path, file_index_str = service.treat_image_input(arg_value, self.temp_dir, "{}".format(field))
+                self.created_images.append(image_path)
+                command += "-{} {} ".format(field, image_path)
+            elif field == "style":
+                assert (request.content != ""), "Style image path should not be empty."
+                image_path, file_index_str = service.treat_image_input(arg_value, self.temp_dir, "{}".format(field))
+                self.created_images.append(image_path)
+                command += "-{} {} ".format(field, image_path)
+            elif field == "alpha":
+                if arg_value == 0.0:
+                    continue
                 else:
-                    print ("{}: {}".format(descriptor.full_name, value))
-        dump_object(request)
-        
-        # Get information from request (defined in .proto file)
-        self.content_path = request.content_path
-        print("Content path " + self.content_path)
-        self.style_path = request.style_path
-        print("Style path " + self.style_path)
-        self.output_image_size =  request.output_image_size if request.output_image_size  != 0 else self.output_image_size
-        print("output_image_size " + str(self.output_image_size))
-        self.start_from_random = request.start_from_random
-        print("start_from_random " + str(self.start_from_random))
-        self.optimization_rounds = request.optimization_rounds if request.optimization_rounds  != 0 else self.optimization_rounds
-        print("optimization_rounds " + str(self.optimization_rounds))
-        self.optimization_iterations = request.optimization_iterations if request.optimization_iterations  != 0 else self.optimization_iterations
-        print("optimization_iterations " + str(self.optimization_iterations))
-        
-        # Calls transfer_style
-        st_model = style_transfer.style_transfer_model()
-        output_img = st_model.transfer_style(content_image_path = self.content_path, 
-                                             style_image_path = self.style_path,
-                                             start_from_random = self.start_from_random,
-                                             optimization_rounds = self.optimization_rounds,
-                                             optimization_iterations = self.optimization_iterations,
-                                             output_image_size = self.output_image_size)
-        
-        # Creates an image() object (from .proto file) to respond
-        self.output_image = image()
-        self.output_image.size = self.output_image_size
-        #self.output_image.data = style_transfer.style_transfer_model.img_to_base64(output_img)
-        self.output_image.data = st_model.npimg_to_base64jpg(output_img)
-        log.debug('Style transfer successful!')
-        return self.output_image
+                    try:
+                        float_alpha = float(arg_value)
+                    except Exception as e:
+                        log.error(e)
+                        return False
+                    if float_alpha < 0.0 or float_alpha > 1.0:
+                        log.error("Argument alpha should be a real number between 0 and 1.")
+                        return False
+                    command += "-{} {} ".format(field, str(round(float_alpha, 2)))
+            elif field == "saveExt":
+                arg_value = arg_value.lower()
+                if arg_value == "":
+                    command += "-{} {} ".format(field, default)
+                else:
+                    if (arg_value == "jpg") or (arg_value == "png"):
+                        command += "-{} {} ".format(field, arg_value)
+                    else:
+                        log.error("Field saveExt should either be jpg or png. Provided: {}.".format(arg_value))
+                        return False
+            else:
+                # If types
+                if var_type == "bool":
+                    if eval("request.{}".format(field)):
+                        command += "-{} ".format(field)
+                elif var_type == "int":
+                    try:
+                        int(eval("request.{}".format(field)))
+                    except Exception as e:
+                        log.error(e)
+                    command += "-{} {} ".format(field, eval("request.{}".format(field)))
+        return command, file_index_str
 
-# The gRPC serve function.
-#
-# Params:
-# max_workers: pool of threads to execute calls asynchronously
-# port: gRPC server port
-#
-# Add all your classes to the server here.
-# (from generated .py files by protobuf compiler)
-def serve(max_workers=10, port=7777):
+    def _exit_handler(self):
+        log.debug('Deleting temporary images before exiting.')
+        for image in self.created_images:
+            service.clear_file(image)
+
+    def transfer_image_style(self, request, context):
+        """Python wrapper to AdaIN Style Transfer written in lua.
+        Receives gRPC request, treats the inputs and creates a thread that executes the lua command."""
+
+        # Lua command call arguments. Key = argument name, value = tuple(type, required?, default_value)
+        arguments = {"content": ("image", True, None),
+                     "style": ("image", True, None),
+                     # "mask": ("image", False, None), Not supported yet, will add once dApp and gRPC work
+                     "contentSize": ("int", False, 0),
+                     "styleSize": ("int", False, 0),
+                     "preserveColor": ("bool", False, None),
+                     "alpha": ("double", False, None),
+                     # "styleInterpWeights": ???, Not supported yet, will add once dApp and gRPC work
+                     "crop": ("bool", False, None),
+                     "saveExt": ("string", False, "jpg")}
+
+        # Treat inputs and assemble lua commands
+        base_command = "th test.lua "
+        command, file_index_str = self.treat_inputs(base_command, request, arguments)
+        command += "-{} {}".format("outputDir", self.temp_dir)  # pre-defined for the service
+
+        log.debug("Lua command generated: {}".format(command))
+
+        # Call style transfer (Lua)
+        process = subprocess.Popen(command.split(), stdout=subprocess.PIPE)
+        process.communicate()
+
+        # Get output file path
+        output_image_path = self.temp_dir + "contentimage_" + file_index_str \
+            + "_stylized_styleimage_" + file_index_str + "." + self.saveExt
+        self.created_images.append(output_image_path)
+
+        # Prepare gRPC output message
+        self.result = Image()
+        self.result.data = service.jpg_to_base64(output_image_path, open_file=True).decode("utf-8")
+        log.debug("Output image generated. Service successfully completed.")
+
+        # TODO: Clear temp images even if an error occurs
+        for image in self.created_images:
+            service.clear_file(image)
+
+        return self.result
+
+
+def serve(max_workers=5, port=7777):
+    """The gRPC serve function.
+
+    Params:
+    max_workers: pool of threads to execute calls asynchronously
+    port: gRPC server port
+
+    Add all your classes to the server here.
+    (from generated .py files by protobuf compiler)"""
+
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=max_workers))
-    style_transfer_rpc_pb2_grpc.add_StyleTransferServicer_to_server(
+    grpc_bt_grpc.add_StyleTransferServicer_to_server(
         StyleTransferServicer(), server)
     server.add_insecure_port('[::]:{}'.format(port))
     return server
 
 
 if __name__ == '__main__':
-    '''
-    Runs the gRPC server to communicate with the Snet Daemon.
-    '''
-    parser = service.common.common_parser(__file__)
+    """Runs the gRPC server to communicate with the Snet Daemon."""
+    parser = service.common_parser(__file__)
     args = parser.parse_args(sys.argv[1:])
-    service.common.main_loop(serve, args)
+    service.main_loop(serve, args)

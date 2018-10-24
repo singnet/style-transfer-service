@@ -1,6 +1,17 @@
-registry = {"style_transfer_service": {"grpc": 7022, "snetd": 7021}}
+from .serviceUtils import *
+import argparse
 
-default_args = {"output_image_size":300,
-                "start_from_random":False, 
-                "optimization_rounds":2,
-                "optimization_iterations":10}
+registry = {"style_transfer_service": {"grpc": 7027, "snetd": 7028}}
+
+
+def common_parser(script_name):
+    parser = argparse.ArgumentParser(prog=script_name)
+    service_name = os.path.splitext(os.path.basename(script_name))[0]
+    parser.add_argument(
+        "--grpc-port",
+        help="port to bind gRPC service to",
+        default=registry[service_name]["grpc"],
+        type=int,
+        required=False,
+    )
+    return parser

@@ -1,6 +1,22 @@
-StyleTransfer.ipynb
-core
+# Apple and windows thumbnails
+.DS_Store
+.DS_Store?
+Thumbs.db
+
+# Many other OS generated files
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+
+# Added for SingularityNET service integration
+config/
+Service Integration Pipeline.ipynb
 .ipynb_checkpoints/
-dnn_models/
-db_style_transfer_service.db
+videos/
+*.db
+.idea/
+service/__pycache__/
+service/service_spec/__pycache__/
+examples/videoutput/
 
