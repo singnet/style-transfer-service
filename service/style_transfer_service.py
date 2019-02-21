@@ -122,7 +122,7 @@ class StyleTransferServicer(grpc_bt_grpc.StyleTransferServicer):
                      "saveExt": ("string", False, "jpg")}
 
         # Treat inputs and assemble lua commands
-        base_command = "th ./service/original-lua-code/test.lua "
+        base_command = "cd ./service/original-lua-code; th test.lua "
         command, file_index_str = self.treat_inputs(base_command, request, arguments)
         command += "-{} {}".format("outputDir", self.temp_dir)  # pre-defined for the service
 
