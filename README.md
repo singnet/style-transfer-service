@@ -1,5 +1,8 @@
+[issue-template]: ../../issues/new?template=BUG_REPORT.md
+[feature-template]: ../../issues/new?template=FEATURE_REQUEST.md
+
 <a href="https://singularitynet.io/">
-<img align="right" src="service/singularityNETblue.png" alt="drawing" width="160"/>
+<img align="right" src="./docs/assets/logo/singularityNETblue.png" alt="drawing" width="160"/>
 </a>
 
 # Artistic Style Transfer
@@ -40,30 +43,30 @@ This paper proposes the first real-time style transfer algorithm that can transf
 
 ## Examples
 <p align='center'>
-  <img src='examples/avril_cropped.jpg' width="140px">
-  <img src='examples/impronte_d_artista_cropped.jpg' width="140px">
-  <img src='examples/avril_stylized_impronte_d_artista.jpg' width="140px">
-  <img src='examples/cornell_cropped.jpg' width="140px">
-  <img src='examples/woman_with_hat_matisse_cropped.jpg' width="140px">
-  <img src='examples/cornell_stylized_woman_with_hat_matisse.jpg' width="140px">
+  <img src='docs/assets/examples/avril_cropped.jpg' width="140px">
+  <img src='docs/assets/examples/impronte_d_artista_cropped.jpg' width="140px">
+  <img src='docs/assets/examples/avril_stylized_impronte_d_artista.jpg' width="140px">
+  <img src='docs/assets/examples/cornell_cropped.jpg' width="140px">
+  <img src='docs/assets/examples/woman_with_hat_matisse_cropped.jpg' width="140px">
+  <img src='docs/assets/examples/cornell_stylized_woman_with_hat_matisse.jpg' width="140px">
 </p>
 
 <p align='center'>
-  <img src='examples/chicago_cropped.jpg' width="140px">
-  <img src='examples/ashville_cropped.jpg' width="140px">
-  <img src='examples/chicago_stylized_asheville.jpg' width="140px">
-  <img src='examples/sailboat_cropped.jpg' width="140px">
-  <img src='examples/sketch_cropped.png' width="140px">
-  <img src='examples/sailboat_stylized_sketch.jpg' width="140px">
+  <img src='docs/assets/examples/chicago_cropped.jpg' width="140px">
+  <img src='docs/assets/examples/ashville_cropped.jpg' width="140px">
+  <img src='docs/assets/examples/chicago_stylized_asheville.jpg' width="140px">
+  <img src='docs/assets/examples/sailboat_cropped.jpg' width="140px">
+  <img src='docs/assets/examples/sketch_cropped.png' width="140px">
+  <img src='docs/assets/examples/sailboat_stylized_sketch.jpg' width="140px">
 </p>
 
 <p align='center'>
-  <img src='examples/modern_cropped.jpg' width="140px">
-  <img src='examples/goeritz_cropped.jpg' width="140px">
-  <img src='examples/modern_stylized_goeritz.jpg' width="140px">
-  <img src='examples/lenna_cropped.jpg' width="140px">
-  <img src='examples/en_campo_gris_cropped.jpg', width="140px">
-  <img src='examples/lenna_stylized_en_campo_gris.jpg' width="140px">
+  <img src='docs/assets/examples/modern_cropped.jpg' width="140px">
+  <img src='docs/assets/examples/goeritz_cropped.jpg' width="140px">
+  <img src='docs/assets/examples/modern_stylized_goeritz.jpg' width="140px">
+  <img src='docs/assets/examples/lenna_cropped.jpg' width="140px">
+  <img src='docs/assets/examples/en_campo_gris_cropped.jpg', width="140px">
+  <img src='docs/assets/examples/lenna_stylized_en_campo_gris.jpg' width="140px">
 </p>
 
 ## Dependencies
@@ -124,11 +127,11 @@ th test.lua -content input/content/newyork.jpg -style input/style/brushstrokes.j
 ```
 
 <p align='center'>
-  <img src='input/content/newyork.jpg' height="200px">
-  <img src='input/style/brushstrokes.jpg' height="200px">
+  <img src='docs/assets/input/content/newyork.jpg' height="200px">
+  <img src='docs/assets/input/style/brushstrokes.jpg' height="200px">
 </p>
 <p align='center'>
-  <img src='examples/newyork_brushstrokes_preservecolor.jpg' height="370px">
+  <img src='docs/assets/examples/newyork_brushstrokes_preservecolor.jpg' height="370px">
 </p>
 
 ### Style interpolation

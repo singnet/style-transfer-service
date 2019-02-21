@@ -10,7 +10,7 @@ import sys
 logging.basicConfig(
     level=10, format="%(asctime)s - [%(levelname)8s] - %(name)s - %(message)s"
 )
-log = logging.getLogger("image_recon_service")
+log = logging.getLogger("style_transfer_service")
 
 
 class StyleTransferServicer(grpc_bt_grpc.StyleTransferServicer):
@@ -119,7 +119,7 @@ class StyleTransferServicer(grpc_bt_grpc.StyleTransferServicer):
                      "saveExt": ("string", False, "jpg")}
 
         # Treat inputs and assemble lua commands
-        base_command = "th test.lua "
+        base_command = "th ./service/original-lua-code/test.lua "
         command, file_index_str = self.treat_inputs(base_command, request, arguments)
         command += "-{} {}".format("outputDir", self.temp_dir)  # pre-defined for the service
 
