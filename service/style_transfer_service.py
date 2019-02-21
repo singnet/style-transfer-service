@@ -1,3 +1,4 @@
+import os
 import logging
 import grpc
 import service
@@ -22,6 +23,8 @@ class StyleTransferServicer(grpc_bt_grpc.StyleTransferServicer):
         self.result = "Fail"
         self.required_arguments = ['content', 'style']
         self.temp_dir = "./temp/"
+        if not os.path.exists(self.temp_dir):
+            os.makedirs(self.temp_dir)
         self.saveExt = 'jpg'
         self.output_image_prefix = "outputimage_"
         # Store the names of the images to delete them afterwards
