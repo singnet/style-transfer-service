@@ -1,0 +1,30 @@
+{
+    "version": 1,
+    "display_name": "Style Transfer",
+    "encoding": "proto",
+    "service_type": "grpc",
+    "payment_expiration_threshold": 40320,
+    "model_ipfs_hash": "Qmd4vQRQJFbubjbUqY359AZVbH89i4eusMraGiKa8J6TBN",
+    "mpe_address": "0x7E6366Fbe3bdfCE3C906667911FC5237Cc96BD08",
+    "pricing": {
+        "price_model": "fixed_price",
+        "price_in_cogs": 0
+    },
+    "groups": [
+        {
+            "group_name": "default_group",
+            "group_id": "AUvUKd1wGtYJHIq6CvqjEQ/X0lvMnIHlJe8a/k0l+ns=",
+            "payment_address": "0xCEb196e0236C5B4EE62d5C87692284FBd52fCBD0"
+        }
+    ],
+    "endpoints": [
+        {
+            "group_name": "default_group",
+            "endpoint": "http://54.203.198.53:7078"
+        }
+    ],
+    "service_description": {
+        "url": "https://github.com/singnet/style-transfer-service",
+        "description": "Uses deep neural networks to transfer the artistic style of a Style Image to a Content Image"
+    }
+}

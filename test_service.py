@@ -9,6 +9,7 @@ from service import registry, base64_to_jpg, clear_file
 if __name__ == "__main__":
 
     try:
+
         # open a gRPC channel
         endpoint = "localhost:{}".format(registry["style_transfer_service"]["grpc"])
         channel = grpc.insecure_channel("{}".format(endpoint))
