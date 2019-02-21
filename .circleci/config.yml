@@ -199,7 +199,7 @@ jobs:
     - image: circleci/python:3.6.6-node
     working_directory: ~/singnet
     environment:
-      SERVICE_NAME: style-transfer
+      SERVICE_NAME: style-transfer-service
       SERVICE_RUN_COMMAND: bash -c "git pull;python3 run_service.py"
       SERVICE_TEST_COMMAND: bash -c "python3 test_service.py auto"
     steps:
@@ -213,7 +213,7 @@ jobs:
     - image: circleci/python:3.6.6-node
     working_directory: ~/singnet
     environment:
-      SERVICE_NAME: style-transfer
+      SERVICE_NAME: style-transfer-service
       SERVICE_RUN_COMMAND: bash -c "git pull;python3 run_service.py"
       SERVICE_TEST_COMMAND: bash -c "python3 test_service.py"
       SNETD_PORT_KOVAN: 7018
