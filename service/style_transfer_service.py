@@ -1,3 +1,4 @@
+import os
 import logging
 import grpc
 import service
@@ -10,7 +11,7 @@ import sys
 logging.basicConfig(
     level=10, format="%(asctime)s - [%(levelname)8s] - %(name)s - %(message)s"
 )
-log = logging.getLogger("image_recon_service")
+log = logging.getLogger("style_transfer_service")
 
 
 class StyleTransferServicer(grpc_bt_grpc.StyleTransferServicer):
@@ -21,7 +22,9 @@ class StyleTransferServicer(grpc_bt_grpc.StyleTransferServicer):
         log.debug("StyleTransferServicer created!")
         self.result = "Fail"
         self.required_arguments = ['content', 'style']
-        self.temp_dir = "./temp/"
+        self.temp_dir = os.getcwd() + "service/original-lua-code/temp/"
+        if not os.path.exists(self.temp_dir):
+            os.makedirs(self.temp_dir)
         self.saveExt = 'jpg'
         self.output_image_prefix = "outputimage_"
         # Store the names of the images to delete them afterwards
@@ -119,7 +122,7 @@ class StyleTransferServicer(grpc_bt_grpc.StyleTransferServicer):
                      "saveExt": ("string", False, "jpg")}
 
         # Treat inputs and assemble lua commands
-        base_command = "th test.lua "
+        base_command = "th ./service/original-lua-code/test.lua "
         command, file_index_str = self.treat_inputs(base_command, request, arguments)
         command += "-{} {}".format("outputDir", self.temp_dir)  # pre-defined for the service
 

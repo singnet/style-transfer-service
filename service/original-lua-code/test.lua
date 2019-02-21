@@ -2,8 +2,8 @@ require 'torch'
 require 'nn'
 require 'image'
 require 'paths'
-require 'lib/AdaptiveInstanceNormalization'
-require 'lib/utils'
+require 'service/original-lua-code/lib/AdaptiveInstanceNormalization'
+require 'service/original-lua-code/lib/utils'
 
 local cmd = torch.CmdLine()
 
@@ -13,8 +13,8 @@ cmd:option('-style', '',
 cmd:option('-styleDir', '', 'Directory path to a batch of style images')
 cmd:option('-content', '', 'File path to the content image')
 cmd:option('-contentDir', '', 'Directory path to a batch of content images')
-cmd:option('-vgg', 'models/vgg_normalised.t7', 'Path to the VGG network')
-cmd:option('-decoder', 'models/decoder.t7', 'Path to the decoder')
+cmd:option('-vgg', 'service/original-lua-code/models/vgg_normalised.t7', 'Path to the VGG network')
+cmd:option('-decoder', 'service/original-lua-code/models/decoder.t7', 'Path to the decoder')
 
 -- Additional options
 cmd:option('-contentSize', 512,

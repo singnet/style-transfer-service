@@ -1,7 +1,7 @@
 from .serviceUtils import *
 import argparse
 
-registry = {"style_transfer_service": {"grpc": 7027, "snetd": 7028}}
+registry = {"style_transfer_service": {"grpc": 7017}}
 
 
 def common_parser(script_name):
