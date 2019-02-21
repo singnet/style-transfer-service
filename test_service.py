@@ -40,7 +40,7 @@ if __name__ == "__main__":
                                                         crop=crop,
                                                         saveExt=saveExt)
         # make the call
-        response = stub.increase_image_resolution(request)
+        response = stub.transfer_image_style(request)
         print("Response received: {}".format(response))
 
         # et voilà
