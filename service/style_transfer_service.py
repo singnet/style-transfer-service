@@ -22,7 +22,7 @@ class StyleTransferServicer(grpc_bt_grpc.StyleTransferServicer):
         log.debug("StyleTransferServicer created!")
         self.result = "Fail"
         self.required_arguments = ['content', 'style']
-        self.temp_dir = "./temp/"
+        self.temp_dir = os.getcwd() + "service/original-lua-code/temp/"
         if not os.path.exists(self.temp_dir):
             os.makedirs(self.temp_dir)
         self.saveExt = 'jpg'
