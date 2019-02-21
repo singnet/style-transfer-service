@@ -125,7 +125,6 @@ class StyleTransferServicer(grpc_bt_grpc.StyleTransferServicer):
         base_command = "th ./service/original-lua-code/test.lua "
         command, file_index_str = self.treat_inputs(base_command, request, arguments)
         command += "-{} {}".format("outputDir", self.temp_dir)  # pre-defined for the service
-        command = "cd ./service/original-lua-code; " + command
 
         log.debug("Lua command generated: {}".format(command))
 
