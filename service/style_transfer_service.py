@@ -22,7 +22,7 @@ class StyleTransferServicer(grpc_bt_grpc.StyleTransferServicer):
         log.debug("StyleTransferServicer created!")
         self.result = "Fail"
         self.required_arguments = ['content', 'style']
-        self.temp_dir = os.getcwd() + "service/original-lua-code/temp/"
+        self.temp_dir = os.getcwd() + "/service/original-lua-code/temp/"
         if not os.path.exists(self.temp_dir):
             os.makedirs(self.temp_dir)
         self.saveExt = 'jpg'
@@ -48,9 +48,6 @@ class StyleTransferServicer(grpc_bt_grpc.StyleTransferServicer):
             except Exception as e:  # AttributeError if trying to access a field that hasn't been specified.
                 log.error(e)
                 return False
-
-            print("Received request.{} = ".format(field))
-            print(arg_value)
 
             # Deals with each field (or field type) separately. This is very specific to the lua command required.
             # If fields
