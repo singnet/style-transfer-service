@@ -35,7 +35,6 @@ class StyleTransferServicer(grpc_bt_grpc.StyleTransferServicer):
         if the values and types are correct and, for each input/input_type adds the argument to the lua command."""
 
         # Base command is the prefix of the command (e.g.: 'th test.lua ')
-        file_index_str = ""
         command = base_command
         for field, values in arguments.items():
             var_type = values[0]
@@ -53,12 +52,12 @@ class StyleTransferServicer(grpc_bt_grpc.StyleTransferServicer):
             # If fields
             if field == "content":
                 assert(request.content != ""), "Content image path should not be empty."
-                image_path, file_index_str = service.treat_image_input(arg_value, self.temp_dir, "{}".format(field))
+                image_path, content_file_index_str = service.treat_image_input(arg_value, self.temp_dir, "{}".format(field))
                 self.created_images.append(image_path)
                 command += "-{} {} ".format(field, image_path)
             elif field == "style":
                 assert (request.content != ""), "Style image path should not be empty."
-                image_path, file_index_str = service.treat_image_input(arg_value, self.temp_dir, "{}".format(field))
+                image_path, style_file_index_str = service.treat_image_input(arg_value, self.temp_dir, "{}".format(field))
                 self.created_images.append(image_path)
                 command += "-{} {} ".format(field, image_path)
             elif field == "alpha":
@@ -95,7 +94,7 @@ class StyleTransferServicer(grpc_bt_grpc.StyleTransferServicer):
                     except Exception as e:
                         log.error(e)
                     command += "-{} {} ".format(field, eval("request.{}".format(field)))
-        return command, file_index_str
+        return command, content_file_index_str, style_file_index_str
 
     def _exit_handler(self):
         log.debug('Deleting temporary images before exiting.')
@@ -120,18 +119,20 @@ class StyleTransferServicer(grpc_bt_grpc.StyleTransferServicer):
 
         # Treat inputs and assemble lua commands
         base_command = "th ./service/original-lua-code/test.lua "
-        command, file_index_str = self.treat_inputs(base_command, request, arguments)
+        command, content_file_index_str, style_file_index_str = self.treat_inputs(base_command, request, arguments)
         command += "-{} {}".format("outputDir", self.temp_dir)  # pre-defined for the service
 
         log.debug("Lua command generated: {}".format(command))
 
         # Call style transfer (Lua)
-        process = subprocess.Popen(command.split(), stdout=subprocess.PIPE)
-        process.communicate()
+        process = subprocess.Popen(command.split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        subprocess_output, subprocess_error = process.communicate()
+        log.debug("Lua subprocess output: {}".format(subprocess_output))
+        log.debug("Lua subprocess error: {}".format(subprocess_error))
 
         # Get output file path
-        output_image_path = self.temp_dir + "contentimage_" + file_index_str \
-            + "_stylized_styleimage_" + file_index_str + "." + self.saveExt
+        output_image_path = self.temp_dir + "contentimage_" + content_file_index_str \
+            + "_stylized_styleimage_" + style_file_index_str + "." + self.saveExt
         self.created_images.append(output_image_path)
 
         # Prepare gRPC output message
