@@ -125,8 +125,10 @@ class StyleTransferServicer(grpc_bt_grpc.StyleTransferServicer):
         log.debug("Lua command generated: {}".format(command))
 
         # Call style transfer (Lua)
-        process = subprocess.Popen(command.split(), stdout=subprocess.PIPE)
-        process.communicate()
+        process = subprocess.Popen(command.split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        subprocess_output, subprocess_error = process.communicate()
+        log.debug("Lua subprocess output: {}".format(subprocess_output))
+        log.debug("Lua subprocess error: {}".format(subprocess_error))
 
         # Get output file path
         output_image_path = self.temp_dir + "contentimage_" + content_file_index_str \
