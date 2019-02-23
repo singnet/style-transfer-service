@@ -21,7 +21,7 @@ This repository was forked from [xunhuang1995/AdaIN-style](https://github.com/xu
 Refer to:
 - [The User's Guide](https://singnet.github.io/style-transfer-service/): for information about how to use this code as a SingularityNET service;
 - [The Original Repository](https://github.com/xunhuang1995/AdaIN-style): for up-to-date information on [xunhuang1995](https://github.com/xunhuang1995)'s implementation of this code.
-- [SingularityNET Wiki](https://github.com/singnet/wiki): for information and tutorials on how to use the SingularityNET and its services.
+- [SingularityNET's Dev Portal](https://dev.singularitynet.io/): for information and tutorials on how to use the SingularityNET and its services.
 
 ## Contributing and Reporting Issues
 
