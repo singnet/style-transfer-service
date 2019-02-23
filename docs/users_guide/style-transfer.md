@@ -58,8 +58,8 @@ Example:
 
 Content Image                        | Style Image
 :-----------------------------------:|:-------------------------:
-<img src="assets/input/newyork.jpg"> | <img src="assets/input/style/brushstrokes.jpg">
+<img src="assets/input/content/newyork.jpg"> | <img src="assets/input/style/brushstrokes.jpg">
 
 **Output**
 
-<img src="assets/examples/newyork_brushstrokes_preservecolor.jpg">
+![alt text](assets/examples/newyork_brushstrokes_preservecolor.jpg)
