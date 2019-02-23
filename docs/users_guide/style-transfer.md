@@ -58,8 +58,8 @@ Example:
 
 Content Image                        | Style Image
 :-----------------------------------:|:-------------------------:
-<img width="40%" src="assets/input/content/newyork.jpg"> | <img width="40%" src="assets/input/style/brushstrokes.jpg">
+<img width="100%" src="assets/input/content/newyork.jpg"> | <img width="100%" src="assets/input/style/brushstrokes.jpg">
 
 **Output**
 
-<img width="80%" src="assets/examples/newyork_brushstrokes_preservecolor.jpg">
+<img width="100%" src="assets/examples/newyork_brushstrokes_preservecolor.jpg">
