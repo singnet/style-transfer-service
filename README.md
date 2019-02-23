@@ -5,7 +5,7 @@
 <img align="right" src="./docs/assets/logo/singularityNETblue.png" alt="drawing" width="160"/>
 </a>
 
-# Style Transfer
+# Style Transfer Service
 
 > Repository for the style transfer service on the SingularityNET.
 
