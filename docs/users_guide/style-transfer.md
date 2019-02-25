@@ -41,7 +41,7 @@ You can use this service at [SingularityNET DApp](http://beta.singularitynet.io/
 You can also call the service from SingularityNET CLI:
 
 ```
-$ snet client call transfer_image_style '{"content": "CONTENT_IMAGE_URL", "style": "STYLE_IMAGE_URL"}'
+$ snet client call snet style-transfer transfer_image_style '{"content": "CONTENT_IMAGE_URL", "style": "STYLE_IMAGE_URL"}'
 ```
 
 Go to [this tutorial](https://dev.singularitynet.io/tutorials/publish/) to learn more about publishing, using and deleting a service.
