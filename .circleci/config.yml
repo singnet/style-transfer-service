@@ -201,7 +201,7 @@ jobs:
     - image: circleci/python:3.6.6-node
     working_directory: ~/singnet
     environment:
-      SERVICE_NAME: style-transfer-service
+      SERVICE_NAME: style-transfer
       SERVICE_RUN_COMMAND: bash -c "git pull;python3 run_service.py"
       SERVICE_TEST_COMMAND: bash -c "python3 test_service.py auto"
     steps:
@@ -215,7 +215,7 @@ jobs:
     - image: circleci/python:3.6.6-node
     working_directory: ~/singnet
     environment:
-      SERVICE_NAME: style-transfer-service
+      SERVICE_NAME: style-transfer
       CERTS_FOLDER: singnet/.certs
       SERVICE_RUN_COMMAND: bash -c "git pull;python3 run_service.py --ssl"
       SERVICE_TEST_COMMAND: bash -c "python3 test_service.py"
