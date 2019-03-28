@@ -8,7 +8,6 @@ from PIL import Image
 import time
 import re
 import argparse
-from service import registry
 
 logging.basicConfig(
     level=10, format="%(asctime)s - [%(levelname)8s] - %(name)s - %(message)s")

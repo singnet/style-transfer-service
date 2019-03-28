@@ -202,8 +202,8 @@ jobs:
     working_directory: ~/singnet
     environment:
       SERVICE_NAME: style-transfer
-      SERVICE_RUN_COMMAND: bash -c "git pull;python3 run_service.py"
-      SERVICE_TEST_COMMAND: bash -c "python3 test_service.py auto"
+      SERVICE_RUN_COMMAND: bash -c "git pull origin ${CIRCLE_BRANCH};python3 run_service.py"
+      SERVICE_TEST_COMMAND: bash -c "python3 test_service.py"
     steps:
       - build_command:
           docker_nvidia: true
@@ -217,7 +217,7 @@ jobs:
     environment:
       SERVICE_NAME: style-transfer
       CERTS_FOLDER: singnet/.certs
-      SERVICE_RUN_COMMAND: bash -c "git pull;python3 run_service.py --ssl"
+      SERVICE_RUN_COMMAND: bash -c "git pull origin ${CIRCLE_BRANCH};python3 run_service.py --ssl"
       SERVICE_TEST_COMMAND: bash -c "python3 test_service.py"
       SNETD_PORT_MAINNET: 7018
       SNETD_PORT_ROPSTEN: 7078
