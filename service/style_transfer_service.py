@@ -133,6 +133,7 @@ class StyleTransferServicer(grpc_bt_grpc.StyleTransferServicer):
             for image in self.created_images:
                 service.clear_file(image)
             error = subprocess_error.split("\n")[1]
+            log.error(error)
             raise Exception(error)
 
         # Get output file path
