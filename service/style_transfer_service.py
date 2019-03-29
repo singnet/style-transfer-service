@@ -132,7 +132,7 @@ class StyleTransferServicer(grpc_bt_grpc.StyleTransferServicer):
         if "out of memory".encode() in subprocess_error:
             for image in self.created_images:
                 service.clear_file(image)
-            error = subprocess_error.split("\n")[1]
+            error = subprocess_error.split(b"\n")[1]
             log.error(error)
             raise Exception(error)
 
