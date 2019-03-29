@@ -129,6 +129,12 @@ class StyleTransferServicer(grpc_bt_grpc.StyleTransferServicer):
         subprocess_output, subprocess_error = process.communicate()
         log.debug("Lua subprocess output: {}".format(subprocess_output))
         log.debug("Lua subprocess error: {}".format(subprocess_error))
+        if "out of memory".encode() in subprocess_error:
+            for image in self.created_images:
+                service.clear_file(image)
+            error = subprocess_error.split(b"\n")[1]
+            log.error(error)
+            raise Exception(error)
 
         # Get output file path
         output_image_path = self.temp_dir + "contentimage_" + content_file_index_str \
@@ -140,7 +146,6 @@ class StyleTransferServicer(grpc_bt_grpc.StyleTransferServicer):
         self.result.data = service.jpg_to_base64(output_image_path, open_file=True).decode("utf-8")
         log.debug("Output image generated. Service successfully completed.")
 
-        # TODO: Clear temp images even if an error occurs
         for image in self.created_images:
             service.clear_file(image)
 
