@@ -129,7 +129,7 @@ class StyleTransferServicer(grpc_bt_grpc.StyleTransferServicer):
         subprocess_output, subprocess_error = process.communicate()
         log.debug("Lua subprocess output: {}".format(subprocess_output))
         log.debug("Lua subprocess error: {}".format(subprocess_error))
-        if "out of memory" in subprocess_error:
+        if "out of memory".encode() in subprocess_error:
             for image in self.created_images:
                 service.clear_file(image)
             error = subprocess_error.split("\n")[1]
