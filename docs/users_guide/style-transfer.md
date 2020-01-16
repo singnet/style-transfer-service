@@ -26,7 +26,10 @@ The service takes as input:
     - contentSize (integer): the output size of the content image. Will apply this value to the smallest dimension of the image and adjust the other to keep proportions;
     - styleSize (integer): the output size of the style image. Will apply this value to the smallest dimension of the image and adjust the other to keep proportions;
 
-Since the service can easily consume all the GPU memory, for SNET dAPP both the content and style output sizes have been fixed at **640**. For SNET CLI, it will still try to use the original dimensions of the input/content and style images.
+Since the service can easily consume all the GPU memory available, for SNET dAPP both the content and style output sizes have been fixed at **640**. 
+
+If the input images are too large, the service will iteratively reduce image dimensions and quality several times so that it can successfully process them. **Therefore, the size of the processed image might be different than the original.**
+
 
 ### What’s the point?
 
