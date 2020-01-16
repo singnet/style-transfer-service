@@ -7,6 +7,7 @@ from service.service_spec.style_transfer_pb2 import Image
 import subprocess
 import concurrent.futures as futures
 import sys
+from PIL import Image as PIL_Image
 
 logging.basicConfig(
     level=10, format="%(asctime)s - [%(levelname)8s] - %(name)s - %(message)s"
@@ -124,22 +125,72 @@ class StyleTransferServicer(grpc_bt_grpc.StyleTransferServicer):
 
         log.debug("Lua command generated: {}".format(command))
 
-        # Call style transfer (Lua)
-        process = subprocess.Popen(command.split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        subprocess_output, subprocess_error = process.communicate()
-        log.debug("Lua subprocess output: {}".format(subprocess_output))
-        log.debug("Lua subprocess error: {}".format(subprocess_error))
+
+
+
+
+        # Initializing parameters to reduce image size if necessary
+        content_image_path = "contentimage_" + content_file_index_str + self.saveExt
+        style_image_path = "styleimage_" + style_file_index_str + self.saveExt
+        # Get output file path
+        output_image_path = self.temp_dir + "contentimage_" + content_file_index_str \
+            + "_stylized_styleimage_" + style_file_index_str + "." + self.saveExt
+        starting_quality = 95
+        current_quality = starting_quality
+        reduce_quality_to = 9 / 10  # of input quality
+        reduce_size_to = 4 / 5  # of input size
+        number_of_attempts = 10
+        resize_output_to_original = False
+
+        # Retrieving original image size
+        content_image = PIL_Image.open(content_image_path)
+        original_content_size = content_image.size
+        content_image.close()
+
+        for resize_attempts in range(1, number_of_attempts + 1):
+            # Call style transfer (Lua)
+            process = subprocess.Popen(command.split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            subprocess_output, subprocess_error = process.communicate()
+
+            log.debug("Lua subprocess output: {}".format(subprocess_output))
+            log.debug("Lua subprocess error: {}".format(subprocess_error))
+            try:
+                output_image = PIL_Image.open(output_image_path)
+                self.created_images.append(output_image_path)
+                if resize_output_to_original:
+                    output_image = output_image.resize(original_content_size, PIL_Image.ANTIALIAS)
+                    output_image.save(output_image_path, quality=starting_quality)
+                break  # return output
+            except Exception as e:  # TODO: how to identify?
+                log.error(str(e))
+                process.kill()
+
+                # Opening content and style images and resizing them according to the number of attempts
+                content_image = PIL_Image.open(content_image_path)
+                style_image = PIL_Image.open(style_image_path)
+                current_content_size = content_image.size
+                current_style_size = style_image.size
+                new_content_size = tuple(round(dim * reduce_size_to) for dim in current_content_size)
+                new_style_size = tuple(round(dim * reduce_size_to) for dim in current_style_size)
+                content_image = content_image.resize(new_content_size, PIL_Image.ANTIALIAS)
+                style_image = style_image.resize(new_style_size, PIL_Image.ANTIALIAS)
+                current_quality = round(current_quality * reduce_quality_to)
+                content_image.save(content_image_path, quality=current_quality)
+                style_image.save(style_image_path, quality=current_quality)
+                content_image.close()
+                style_image.close()
+                log.info("Could not process image in current size. Reducing content image size from " + str(
+                    current_content_size) + " to " + str(new_content_size) + ", style image size from " + str(
+                    current_style_size) + " to " + str(
+                    new_style_size) + " and trying again. Also reducing JPG quality by " + str(
+                    round(1 - reduce_quality_to, 2)) + ".")
+
         if "out of memory".encode() in subprocess_error:
             for image in self.created_images:
                 service.clear_file(image)
             error = subprocess_error.split(b"\n")[1]
             log.error(error)
             raise Exception(error)
-
-        # Get output file path
-        output_image_path = self.temp_dir + "contentimage_" + content_file_index_str \
-            + "_stylized_styleimage_" + style_file_index_str + "." + self.saveExt
-        self.created_images.append(output_image_path)
 
         # Prepare gRPC output message
         self.result = Image()
