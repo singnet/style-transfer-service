@@ -150,7 +150,9 @@ class StyleTransferServicer(grpc_bt_grpc.StyleTransferServicer):
             subprocess_output, subprocess_error = process.communicate()
 
             log.debug("Lua subprocess output: {}".format(subprocess_output))
-            log.debug("Lua subprocess error: {}".format(subprocess_error))
+            if subprocess_error:
+                log.debug("Lua subprocess error: {}".format(subprocess_error))
+
             try:
                 output_image = PIL_Image.open(output_image_path)
                 self.created_images.append(output_image_path)
