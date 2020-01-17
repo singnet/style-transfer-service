@@ -23,5 +23,5 @@
     "payent_channel_key_path": "/opt/singnet/.certs/client-key.pem",
     "pvt_key_for_metering": "47723b5dfa98e7e122c9b5a42e974635e7f2497cb9962fd2fbb5a946fd843a22",
     "rate_limit_per_minute": 2,
-    "service_id": "style-transfer",
+    "service_id": "style-transfer"
 }
