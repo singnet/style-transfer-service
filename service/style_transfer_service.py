@@ -126,8 +126,8 @@ class StyleTransferServicer(grpc_bt_grpc.StyleTransferServicer):
         log.debug("Lua command generated: {}".format(command))
 
         # Initializing parameters to reduce image size if necessary
-        content_image_path = self.temp_dir + "contentimage_" + content_file_index_str + self.saveExt
-        style_image_path = self.temp_dir + "styleimage_" + style_file_index_str + self.saveExt
+        content_image_path = self.temp_dir + "contentimage_" + content_file_index_str + "." + self.saveExt
+        style_image_path = self.temp_dir + "styleimage_" + style_file_index_str + "." + self.saveExt
 
         # Get output file path
         output_image_path = self.temp_dir + "contentimage_" + content_file_index_str \
