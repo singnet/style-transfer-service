@@ -125,13 +125,10 @@ class StyleTransferServicer(grpc_bt_grpc.StyleTransferServicer):
 
         log.debug("Lua command generated: {}".format(command))
 
-
-
-
-
         # Initializing parameters to reduce image size if necessary
-        content_image_path = "contentimage_" + content_file_index_str + self.saveExt
-        style_image_path = "styleimage_" + style_file_index_str + self.saveExt
+        content_image_path = self.temp_dir + "contentimage_" + content_file_index_str + "." + self.saveExt
+        style_image_path = self.temp_dir + "styleimage_" + style_file_index_str + "." + self.saveExt
+
         # Get output file path
         output_image_path = self.temp_dir + "contentimage_" + content_file_index_str \
             + "_stylized_styleimage_" + style_file_index_str + "." + self.saveExt
@@ -153,7 +150,9 @@ class StyleTransferServicer(grpc_bt_grpc.StyleTransferServicer):
             subprocess_output, subprocess_error = process.communicate()
 
             log.debug("Lua subprocess output: {}".format(subprocess_output))
-            log.debug("Lua subprocess error: {}".format(subprocess_error))
+            if subprocess_error:
+                log.debug("Lua subprocess error: {}".format(subprocess_error))
+
             try:
                 output_image = PIL_Image.open(output_image_path)
                 self.created_images.append(output_image_path)
