@@ -10,15 +10,15 @@ ENV SERVICE_DIR=${PROJECT_ROOT}/service
 
 ## Installing common dependencies and python3-pip
 RUN apt-get update && \
-    apt-get install -y python3-pip && \
+    apt-get install -y sudo python3-pip && \
     pip3 install --upgrade pip
 
 # Installing snet-daemon + dependencies
-RUN SNETD_VERSION=`curl -s https://api.github.com/repos/singnet/snet-daemon/releases/latest | grep -oP '"tag_name": "\K(.*)(?=")'` && \
-    cd /tmp && \
+RUN SNETD_VERSION=`curl -s https://api.github.com/repos/singnet/snet-daemon/releases/latest | grep -oP '"tag_name": "\K(.*)(?=")' || echo "v3.1.0"` && \
+    echo 'version' $SNETD_VERSION && \
     wget https://github.com/singnet/snet-daemon/releases/download/${SNETD_VERSION}/snet-daemon-${SNETD_VERSION}-linux-amd64.tar.gz && \
     tar -xvf snet-daemon-${SNETD_VERSION}-linux-amd64.tar.gz && \
-    mv snet-daemon-${SNETD_VERSION}-linux-amd64/snetd /usr/bin/snetd
+    sudo mv snet-daemon-${SNETD_VERSION}-linux-amd64/snetd /usr/bin/snetd
 
 # Cloning service repository and downloading models
 RUN mkdir -p ${SINGNET_REPOS} && \

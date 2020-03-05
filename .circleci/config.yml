@@ -154,7 +154,7 @@ commands:
                       $([ "${DOCKER_NVIDIA}" = "true" ] && echo "--runtime=nvidia" || echo "") \
                       --name ${PROD_TAG}${DOCKER_CONTAINER_NAME} \
                       --restart unless-stopped \
-                      -v ~/${CERTS_FOLDER}:/opt/singnet/.certs \
+                      -v ${CERTS_FOLDER}:/opt/singnet/.certs \
                       $([ "${DOCKER_DEPLOY}" = "true" ] && echo "-p ${SNETD_PORT_MAINNET}:${SNETD_PORT_MAINNET}" || echo "") \
                       $([ "${DOCKER_DEPLOY}" = "true" ] && echo "-p ${SNETD_PORT_ROPSTEN}:${SNETD_PORT_ROPSTEN}" || echo "") \
                       $([ "${DOCKER_DEPLOY}" = "true" ] && echo "-v ~/${ETCD_HOST_FOLDER}:/${ETCD_CONTAINER_FOLDER}" || echo "") \
@@ -205,7 +205,7 @@ jobs:
     working_directory: ~/singnet
     environment:
       SERVICE_NAME: style-transfer
-      SERVICE_RUN_COMMAND: bash -c "git pull origin ${CIRCLE_BRANCH};python3 run_service.py"
+      SERVICE_RUN_COMMAND: bash -c "git pull origin ${CIRCLE_BRANCH};python3 run_service.py --no-daemon"
       SERVICE_TEST_COMMAND: bash -c "python3 test_service.py"
     steps:
       - build_command:
@@ -219,7 +219,7 @@ jobs:
     working_directory: ~/singnet
     environment:
       SERVICE_NAME: style-transfer
-      CERTS_FOLDER: singnet/.certs
+      CERTS_FOLDER: /home/ci/singnet/.certs
       SERVICE_RUN_COMMAND: bash -c "git pull origin ${CIRCLE_BRANCH};python3 run_service.py --ssl"
       SERVICE_TEST_COMMAND: bash -c "python3 test_service.py"
       SNETD_PORT_MAINNET: 7018

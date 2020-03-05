@@ -2,7 +2,6 @@
     "blockchain_network_selected": "main",
     "burst_size": 1,
     "daemon_end_point": "0.0.0.0:7018",
-    "free_call_signer_address": "0x3Bb9b2499c283cec176e7C707Ecb495B7a961ebf",
     "ipfs_end_point": "http://ipfs.singularitynet.io:80",
     "log": {
         "level": "debug",
@@ -14,13 +13,13 @@
             "type": "file"
         }
     },
-    "metering_end_point": "https://mainnet-marketplace.singularitynet.io/metering",
+    "metering_end_point": "https://mainnet-marketplace.singularitynet.io",
     "organization_id": "snet",
     "passthrough_enabled": true,
     "passthrough_endpoint": "http://localhost:7017",
-    "payent_channel_ca_path": "/opt/singnet/.certs/ca.pem",
-    "payent_channel_cert_path": "/opt/singnet/.certs/client.pem",
-    "payent_channel_key_path": "/opt/singnet/.certs/client-key.pem",
+    "payment_channel_ca_path": "/opt/singnet/.certs/ca.pem",
+    "payment_channel_cert_path": "/opt/singnet/.certs/client.pem",
+    "payment_channel_key_path": "/opt/singnet/.certs/client-key.pem",
     "pvt_key_for_metering": "47723b5dfa98e7e122c9b5a42e974635e7f2497cb9962fd2fbb5a946fd843a22",
     "rate_limit_per_minute": 2,
     "service_id": "style-transfer"
