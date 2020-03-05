@@ -205,7 +205,7 @@ jobs:
     working_directory: ~/singnet
     environment:
       SERVICE_NAME: style-transfer
-      SERVICE_RUN_COMMAND: bash -c "git pull origin ${CIRCLE_BRANCH};python3 run_service.py"
+      SERVICE_RUN_COMMAND: bash -c "git pull origin ${CIRCLE_BRANCH};python3 run_service.py --no-daemon"
       SERVICE_TEST_COMMAND: bash -c "python3 test_service.py"
     steps:
       - build_command:
