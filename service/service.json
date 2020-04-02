@@ -4,7 +4,7 @@
     "organization": "SNET",
     "path": "",
     "price": 0,
-    "endpoint": "http://54.203.198.53:7028",
+    "endpoint": "http://52.38.111.172:7028",
     "tags": [
         "neural",
         "artistic",
