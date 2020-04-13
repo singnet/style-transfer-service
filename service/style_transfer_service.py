@@ -67,14 +67,14 @@ class StyleTransferServicer(grpc_bt_grpc.StyleTransferServicer):
                                                        self.temp_dir,
                                                        "{}".format(field),
                                                        uid_images)
-                command += "-{} {} ".format(field, image_path)
+                command += "-{} {} -contentSize 0 ".format(field, image_path)
             elif field == "style":
                 assert (request.content != ""), "Style image path should not be empty."
                 image_path = service.treat_image_input(arg_value,
                                                        self.temp_dir,
                                                        "{}".format(field),
                                                        uid_images)
-                command += "-{} {} ".format(field, image_path)
+                command += "-{} {} -styleSize 0 ".format(field, image_path)
             elif field == "alpha":
                 if arg_value == 0.0:
                     continue
