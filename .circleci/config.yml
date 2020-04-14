@@ -22,7 +22,6 @@ jobs:
           docker-container: "STYLE_TRANSFER"
           docker-nvidia: true
           docker-volumes: "-v ~/singnet/.certs:/opt/singnet/.certs"
-          infura-api-key: ${INFURA_API_KEY}
           daemon-version: ${CI_SNETD_VERSION}
           daemon-pk: ${PK_STYLE_TRANSFER}
   testing:
