@@ -1,9 +1,9 @@
 ## Create container using nvidia-docker and add shared memory size argument
 FROM nightseas/cuda-torch:latest
 
-ARG git_owner
-ARG git_repo
-ARG git_branch
+ARG git_owner="singnet"
+ARG git_repo="style-transfer"
+ARG git_branch="master"
 ARG snetd_version
 
 ENV SINGNET_REPOS=/opt/singnet
