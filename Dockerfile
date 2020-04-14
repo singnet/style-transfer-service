@@ -1,9 +1,11 @@
 ## Create container using nvidia-docker and add shared memory size argument
 FROM nightseas/cuda-torch:latest
 
-ARG git_owner
-ARG git_repo
-ARG git_branch
+ARG git_owner="singnet"
+ARG git_repo="style-transfer"
+ARG git_branch="master"
+ARG snetd_version
+
 ENV SINGNET_REPOS=/opt/singnet
 ENV PROJECT_ROOT=${SINGNET_REPOS}/${git_repo}
 ENV SERVICE_DIR=${PROJECT_ROOT}/service
@@ -14,11 +16,13 @@ RUN apt-get update && \
     pip3 install --upgrade pip
 
 # Installing snet-daemon + dependencies
-RUN SNETD_VERSION=`curl -s https://api.github.com/repos/singnet/snet-daemon/releases/latest | grep -oP '"tag_name": "\K(.*)(?=")' || echo "v3.1.0"` && \
-    echo 'version' $SNETD_VERSION && \
+RUN SNETD_GIT_VERSION=`curl -s https://api.github.com/repos/singnet/snet-daemon/releases/latest | grep -oP '"tag_name": "\K(.*)(?=")' || echo "v3.1.6"` && \
+    SNETD_VERSION=${snetd_version:-${SNETD_GIT_VERSION}} && \
+    cd /tmp && \
     wget https://github.com/singnet/snet-daemon/releases/download/${SNETD_VERSION}/snet-daemon-${SNETD_VERSION}-linux-amd64.tar.gz && \
     tar -xvf snet-daemon-${SNETD_VERSION}-linux-amd64.tar.gz && \
-    sudo mv snet-daemon-${SNETD_VERSION}-linux-amd64/snetd /usr/bin/snetd
+    mv snet-daemon-${SNETD_VERSION}-linux-amd64/snetd /usr/bin/snetd && \
+    rm -rf snet-daemon-*
 
 # Cloning service repository and downloading models
 RUN mkdir -p ${SINGNET_REPOS} && \

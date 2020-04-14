@@ -1,245 +1,43 @@
-commands:
-  build_command:
-    description: "Build and Test SingularityNET Services"
-    parameters:
-      docker_nvidia:
-        type: boolean
-        default: false
-      docker_image_name:
-        type: string
-        default: ""
-      docker_container_name:
-        type: string
-        default: ""
-      docker_mount_volumes:
-        type: boolean
-        default: false
-      docker_mount_src:
-        type: string
-        default: ""
-      docker_mount_dest:
-        type: string
-        default: ""
-    steps:
-      - run:
-          name: Building
-          command: |
-            echo "==================================================== Build Configs ==================================================="
-            export DOCKER_NVIDIA=<< parameters.docker_nvidia >>
-            export DOCKER_IMAGE_NAME=<< parameters.docker_image_name >>
-            export DOCKER_CONTAINER_NAME=<< parameters.docker_container_name >>
-            export DOCKER_MOUNT_VOLUMES=<< parameters.docker_mount_volumes >>
-            export DOCKER_MOUNT_SRC=<< parameters.docker_mount_src >>
-            export DOCKER_MOUNT_DEST=<< parameters.docker_mount_dest >>
-            export PROD_TAG=$([ "${CIRCLE_PROJECT_USERNAME}" = "singnet" ] && echo "PROD_" || echo "")
-            echo            git_user  : ${CIRCLE_PROJECT_USERNAME}
-            echo            git_repo  : ${CIRCLE_PROJECT_REPONAME}
-            echo            git_branch: ${CIRCLE_BRANCH}
-            echo SSH_USER             : ${SSH_USER}
-            echo SSH_HOST             : ${SSH_HOST}
-            echo DOCKER_NVIDIA        : ${DOCKER_NVIDIA}
-            echo DOCKER_IMAGE_NAME    : ${DOCKER_IMAGE_NAME}
-            echo DOCKER_CONTAINER_NAME: ${DOCKER_CONTAINER_NAME}
-            echo DOCKER_MOUNT_VOLUMES : ${DOCKER_MOUNT_VOLUMES}
-            echo DOCKER_MOUNT_SRC     : ${DOCKER_MOUNT_SRC}
-            echo DOCKER_MOUNT_DEST    : ${DOCKER_MOUNT_DEST}
-            echo "======================================================================================================================"
-
-            ssh -o "StrictHostKeyChecking no" ${SSH_USER}@${SSH_HOST} \<< EOF
-              docker stop ${PROD_TAG}${DOCKER_CONTAINER_NAME} || true && docker rename ${PROD_TAG}${DOCKER_CONTAINER_NAME} ${PROD_TAG}${DOCKER_CONTAINER_NAME}_old || true
-              docker build \
-                --no-cache \
-                --build-arg git_owner=${CIRCLE_PROJECT_USERNAME} \
-                --build-arg git_repo=${CIRCLE_PROJECT_REPONAME} \
-                --build-arg git_branch=${CIRCLE_BRANCH} \
-                -t ${DOCKER_IMAGE_NAME}:${CIRCLE_PROJECT_USERNAME} https://raw.githubusercontent.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/${CIRCLE_BRANCH}/Dockerfile
-              docker run \
-                $([ "${DOCKER_NVIDIA}" = "true" ] && echo "--runtime=nvidia" || echo "") \
-                --name ${PROD_TAG}${DOCKER_CONTAINER_NAME} \
-                -v ~/${CERTS_FOLDER}:/opt/singnet/.certs \
-                $([ "${DOCKER_MOUNT_VOLUMES}" = "true" ] && echo "-v ${DOCKER_MOUNT_SRC}:${DOCKER_MOUNT_DEST}" || echo "") \
-                -di ${DOCKER_IMAGE_NAME}:${CIRCLE_PROJECT_USERNAME} ${SERVICE_RUN_COMMAND}
-            EOF
-      - run:
-          name: Removing old Docker Container
-          command: |
-            export DOCKER_IMAGE_NAME=<< parameters.docker_image_name >>
-            export DOCKER_CONTAINER_NAME=<< parameters.docker_container_name >>
-            export PROD_TAG=$([ "${CIRCLE_PROJECT_USERNAME}" = "singnet" ] && echo "PROD_" || echo "")
-
-            ssh -o "StrictHostKeyChecking no" ${SSH_USER}@${SSH_HOST} \<< EOF
-              docker stop ${PROD_TAG}${DOCKER_CONTAINER_NAME}_old || true && docker rm ${PROD_TAG}${DOCKER_CONTAINER_NAME}_old || true
-            EOF
-      - run:
-          name: Testing local
-          command: |
-            export DOCKER_IMAGE_NAME=<< parameters.docker_image_name >>
-            export DOCKER_CONTAINER_NAME=<< parameters.docker_container_name >>
-            export PROD_TAG=$([ "${CIRCLE_PROJECT_USERNAME}" = "singnet" ] && echo "PROD_" || echo "")
-
-            ssh -o "StrictHostKeyChecking no" ${SSH_USER}@${SSH_HOST} \<< EOF
-              docker exec -i ${PROD_TAG}${DOCKER_CONTAINER_NAME} ${SERVICE_TEST_COMMAND}
-            EOF
-
-  deploy_command:
-    description: "Deploy SingularityNET Services"
-    parameters:
-      docker_nvidia:
-        type: boolean
-        default: false
-      docker_image_name:
-        type: string
-        default: ""
-      docker_container_name:
-        type: string
-        default: ""
-      docker_etcd_host_folder:
-        type: string
-        default: ""
-      docker_etcd_container_folder:
-        type: string
-        default: ""
-      docker_mount_volumes:
-        type: boolean
-        default: false
-      docker_mount_src:
-        type: string
-        default: ""
-      docker_mount_dest:
-        type: string
-        default: ""
-    steps:
-      - run:
-          name: Deploying
-          command: |
-            echo "=================================================== Deploy Configs ==================================================="
-            export DOCKER_DEPLOY=$([ "${CIRCLE_PROJECT_USERNAME}" = "singnet" ] && echo "true" || echo "false")
-            export DOCKER_NVIDIA=<< parameters.docker_nvidia >>
-            export DOCKER_IMAGE_NAME=<< parameters.docker_image_name >>
-            export DOCKER_CONTAINER_NAME=<< parameters.docker_container_name >>
-            export DOCKER_MOUNT_VOLUMES=<< parameters.docker_mount_volumes >>
-            export DOCKER_MOUNT_SRC=<< parameters.docker_mount_src >>
-            export DOCKER_MOUNT_DEST=<< parameters.docker_mount_dest >>
-            export ETCD_HOST_FOLDER=<< parameters.docker_etcd_host_folder >>
-            export ETCD_CONTAINER_FOLDER=<< parameters.docker_etcd_container_folder >>
-            export PROD_TAG=$([ "${DOCKER_DEPLOY}" = "true" ] && echo "PROD_" || echo "")
-            echo            git_user  : ${CIRCLE_PROJECT_USERNAME}
-            echo            git_repo  : ${CIRCLE_PROJECT_REPONAME}
-            echo            git_branch: ${CIRCLE_BRANCH}
-            echo SSH_USER             : ${SSH_USER}
-            echo SSH_HOST             : ${SSH_HOST}
-            echo DOCKER_DEPLOY        : ${DOCKER_DEPLOY}
-            echo DOCKER_NVIDIA        : ${DOCKER_NVIDIA}
-            echo DOCKER_IMAGE_NAME    : ${DOCKER_IMAGE_NAME}
-            echo DOCKER_CONTAINER_NAME: ${DOCKER_CONTAINER_NAME}
-            echo DOCKER_MOUNT_VOLUMES : ${DOCKER_MOUNT_VOLUMES}
-            echo DOCKER_MOUNT_SRC     : ${DOCKER_MOUNT_SRC}
-            echo DOCKER_MOUNT_DEST    : ${DOCKER_MOUNT_DEST}
-            echo ETCD_HOST_FOLDER     : ${ETCD_HOST_FOLDER}
-            echo ETCD_CONTAINER_FOLDER: ${ETCD_CONTAINER_FOLDER}
-            echo CERTS_FOLDER         : ${CERTS_FOLDER}
-            echo "======================================================================================================================"
-
-            if [ "$DOCKER_DEPLOY" = "true" ]; then
-            	echo "Status: Deploying..."
-            	ssh -o "StrictHostKeyChecking no" ${SSH_USER}@${SSH_HOST} \<<-EOF
-                    docker stop ${PROD_TAG}${DOCKER_CONTAINER_NAME} || true && docker rename ${PROD_TAG}${DOCKER_CONTAINER_NAME} ${PROD_TAG}${DOCKER_CONTAINER_NAME}_old || true
-                    docker build \
-                      --no-cache \
-                      --build-arg git_owner=${CIRCLE_PROJECT_USERNAME} \
-                      --build-arg git_repo=${CIRCLE_PROJECT_REPONAME} \
-                      --build-arg git_branch=${CIRCLE_BRANCH} \
-                      -t ${DOCKER_IMAGE_NAME}:${CIRCLE_PROJECT_USERNAME} https://raw.githubusercontent.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/${CIRCLE_BRANCH}/Dockerfile
-                    docker run \
-                      $([ "${DOCKER_NVIDIA}" = "true" ] && echo "--runtime=nvidia" || echo "") \
-                      --name ${PROD_TAG}${DOCKER_CONTAINER_NAME} \
-                      --restart unless-stopped \
-                      -v ${CERTS_FOLDER}:/opt/singnet/.certs \
-                      $([ "${DOCKER_DEPLOY}" = "true" ] && echo "-p ${SNETD_PORT_MAINNET}:${SNETD_PORT_MAINNET}" || echo "") \
-                      $([ "${DOCKER_DEPLOY}" = "true" ] && echo "-p ${SNETD_PORT_ROPSTEN}:${SNETD_PORT_ROPSTEN}" || echo "") \
-                      $([ "${DOCKER_DEPLOY}" = "true" ] && echo "-v ${ETCD_HOST_FOLDER}:/${ETCD_CONTAINER_FOLDER}" || echo "") \
-                      $([ "${DOCKER_MOUNT_VOLUMES}" = "true" ] && echo "-v ${DOCKER_MOUNT_SRC}:${DOCKER_MOUNT_DEST}" || echo "") \
-                      -di ${DOCKER_IMAGE_NAME}:${CIRCLE_PROJECT_USERNAME} ${SERVICE_RUN_COMMAND}
-            	EOF
-            else
-            	echo "Status: Not deploying..."
-            fi
-
-      - run:
-          name: Removing old Docker Container
-          command: |
-            export DOCKER_DEPLOY=$([ "${CIRCLE_PROJECT_USERNAME}" = "singnet" ] && echo "true" || echo "false")
-            export PROD_TAG=$([ "${DOCKER_DEPLOY}" = "true" ] && echo "PROD_" || echo "")
-            if [ "$DOCKER_DEPLOY" = "true" ]; then
-            	echo "Status: Deploying..."
-            	export DOCKER_IMAGE_NAME=<< parameters.docker_image_name >>
-            	export DOCKER_CONTAINER_NAME=<< parameters.docker_container_name >>
-            	ssh -o "StrictHostKeyChecking no" ${SSH_USER}@${SSH_HOST} \<<-EOF
-                    docker stop ${PROD_TAG}${DOCKER_CONTAINER_NAME}_old || true && docker rm ${PROD_TAG}${DOCKER_CONTAINER_NAME}_old || true
-            	EOF
-            else
-            	echo "Status: Not deploying..."
-            fi
-
-      - run:
-          name: Testing local
-          command: |
-            export DOCKER_DEPLOY=$([ "${CIRCLE_PROJECT_USERNAME}" = "singnet" ] && echo "true" || echo "false")
-            export PROD_TAG=$([ "${DOCKER_DEPLOY}" = "true" ] && echo "PROD_" || echo "")
-            if [ "$DOCKER_DEPLOY" = "true" ]; then
-            	echo "Status: Deploying..."
-            	export DOCKER_IMAGE_NAME=<< parameters.docker_image_name >>
-            	export DOCKER_CONTAINER_NAME=<< parameters.docker_container_name >>
-            	ssh -o "StrictHostKeyChecking no" ${SSH_USER}@${SSH_HOST} \<<-EOF
-                    docker exec -i ${PROD_TAG}${DOCKER_CONTAINER_NAME} ${SERVICE_TEST_COMMAND}
-            	EOF
-            else
-            	echo "Status: Not deploying..."
-            fi
-
 version: 2.1
-jobs:
-  build-style-transfer:
-    docker:
-    - image: circleci/python:3.6.6-node
-    working_directory: ~/singnet
-    environment:
-      SERVICE_NAME: style-transfer
-      SERVICE_RUN_COMMAND: bash -c "git pull origin ${CIRCLE_BRANCH};python3 run_service.py --no-daemon"
-      SERVICE_TEST_COMMAND: bash -c "python3 test_service.py"
-    steps:
-      - build_command:
-          docker_nvidia: true
-          docker_image_name: style_transfer
-          docker_container_name: STYLE_TRANSFER
 
-  deploy-style-transfer:
+orbs:
+  ssh-deployment: singularitynet/ssh-deployment@2.4.1
+
+jobs:
+  style-transfer:
     docker:
-    - image: circleci/python:3.6.6-node
-    working_directory: ~/singnet
-    environment:
-      SERVICE_NAME: style-transfer
-      CERTS_FOLDER: /home/ramon/singnet/.certs
-      SERVICE_RUN_COMMAND: bash -c "git pull origin ${CIRCLE_BRANCH};python3 run_service.py --ssl"
-      SERVICE_TEST_COMMAND: bash -c "python3 test_service.py"
-      SNETD_PORT_MAINNET: 7018
-      SNETD_PORT_ROPSTEN: 7078
+      - image: circleci/python:3.6.6-node
     steps:
-      - deploy_command:
-          docker_nvidia: true
-          docker_image_name: style_transfer
-          docker_container_name: STYLE_TRANSFER
-          docker_etcd_host_folder: /home/ramon/singnet/.certs
-          docker_etcd_container_folder: opt/singnet/${CIRCLE_PROJECT_REPONAME}/etcd/
+      - checkout
+      - ssh-deployment/deploy:
+          ssh-host: ${SSH_HOST}
+          ssh-user: ${SSH_USER}
+          mainnet-port: "7018"
+          testnet-port: "7078"
+          run-command: "python3 run_service.py --ssl"
+          docker-test-files: "Dockerfile, requirements.txt"
+          docker-file-path: "Dockerfile"
+          docker-no-cache: true
+          docker-image: "style_transfer"
+          docker-container: "STYLE_TRANSFER"
+          docker-nvidia: true
+          docker-volumes: "-v ~/singnet/.certs:/opt/singnet/.certs"
+          daemon-version: ${CI_SNETD_VERSION}
+          daemon-pk: ${PK_STYLE_TRANSFER}
+  testing:
+    docker:
+      - image: circleci/python:3.6.6-node
+    steps:
+      - ssh-deployment/test:
+          ssh-host: ${SSH_HOST}
+          ssh-user: ${SSH_USER}
+          test-command: "sleep 10;python3 test_service.py"
+          docker-container: "STYLE_TRANSFER"
 
 workflows:
-  version: 2.1
   build_deploy_service:
     jobs:
-      - build-style-transfer
-      - deploy-style-transfer:
+      - style-transfer
+      - testing:
           requires:
-            - build-style-transfer
-          filters:
-            branches:
-              only: master
+            - style-transfer

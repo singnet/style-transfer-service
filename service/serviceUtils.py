@@ -7,22 +7,10 @@ import io
 from PIL import Image
 import time
 import re
-import argparse
 
 logging.basicConfig(
     level=10, format="%(asctime)s - [%(levelname)8s] - %(name)s - %(message)s")
 log = logging.getLogger(os.path.basename(__file__))
-
-
-def common_parser(script_name):
-    parser = argparse.ArgumentParser(prog=script_name)
-    service_name = os.path.splitext(os.path.basename(script_name))[0]
-    parser.add_argument("--grpc-port",
-                        help="port to bind gRPC service to",
-                        default=registry[service_name]["grpc"],
-                        type=int,
-                        required=False)
-    return parser
 
 
 def main_loop(grpc_handler, args):
@@ -157,14 +145,14 @@ def png_to_jpg(png_path, delete_original=True):
     return jpg_path
 
 
-def treat_image_input(input_argument, save_dir, image_type):
+def treat_image_input(input_argument, save_dir, image_type, uid):
     """ Gets image save path, downloads links or saves local images to temporary folder, deals with base64 inputs."""
 
     # Gets index (numerical suffix) to save the image (so it multiple calls are allowed)
-    file_index_str = get_file_index(save_dir, image_type+"image_")
+    # file_index_str = get_file_index(save_dir, image_type+"image_")
 
     # Assemble save path (still lacks extension)
-    save_path = save_dir + image_type + "image_" + file_index_str
+    save_path = "{}{}_{}".format(save_dir, uid, image_type)
 
     # If its a link, download
     if urlparse(input_argument).scheme in ('http', 'https'):
@@ -222,4 +210,4 @@ def treat_image_input(input_argument, save_dir, image_type):
         save_path += file_ext
         base64_to_jpg(input_argument, save_path)
 
-    return save_path, file_index_str
+    return save_path

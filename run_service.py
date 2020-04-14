@@ -12,7 +12,7 @@ import argparse
 from service import registry
 
 logging.basicConfig(level=10, format="%(asctime)s - [%(levelname)8s] - %(name)s - %(message)s")
-log = logging.getLogger("run_style_transfer_service")
+log = logging.getLogger("run_style_transfer")
 
 
 def main():
@@ -21,14 +21,14 @@ def main():
     parser.add_argument("--ssl", action="store_true", dest="run_ssl", help="start the daemon with SSL")
     args = parser.parse_args()
     root_path = pathlib.Path(__file__).absolute().parent
-
+    
     # All services modules go here
     service_modules = ["service.style_transfer_service"]
-
+    
     # Call for all the services listed in service_modules
     all_p = start_all_services(root_path, service_modules, args.run_daemon, args.run_ssl)
-
-    # Continuously checking all subprocesses
+    
+    # Continuous checking all subprocess
     try:
         while True:
             for p in all_p:
@@ -60,21 +60,32 @@ def start_service(cwd, service_module, run_daemon, run_ssl):
     Starts SNET Daemon ("snetd") and the python module of the service
     at the passed gRPC port.
     """
-
-    def add_ssl_configs(conf):
-        """Add SSL keys to snetd.config.json"""
+    
+    def add_extra_configs(conf):
+        """Add Extra keys to snetd.config.json"""
         with open(conf, "r") as f:
             snetd_configs = json.load(f)
-            snetd_configs["ssl_cert"] = "/opt/singnet/.certs/fullchain.pem"
-            snetd_configs["ssl_key"] = "/opt/singnet/.certs/privkey.pem"
+            if run_ssl:
+                snetd_configs["ssl_cert"] = "/opt/singnet/.certs/fullchain.pem"
+                snetd_configs["ssl_key"] = "/opt/singnet/.certs/privkey.pem"
+                snetd_configs["payment_channel_ca_path"] = "/opt/singnet/.certs/ca.pem"
+                snetd_configs["payment_channel_cert_path"] = "/opt/singnet/.certs/client.pem"
+                snetd_configs["payment_channel_key_path"] = "/opt/singnet/.certs/client-key.pem"
+            _network = "mainnet"
+            if "ropsten" in conf:
+                _network = "ropsten"
+            infura_key = os.environ.get("INFURA_API_KEY", "")
+            if infura_key:
+                snetd_configs["ethereum_json_rpc_endpoint"] = "https://{}.infura.io/{}".format(_network, infura_key)
+            snetd_configs["metering_end_point"] = "https://{}-marketplace.singularitynet.io".format(_network)
+            snetd_configs["pvt_key_for_metering"] = os.environ.get("PVT_KEY_FOR_METERING", "")
         with open(conf, "w") as f:
             json.dump(snetd_configs, f, sort_keys=True, indent=4)
-
+    
     all_p = []
     if run_daemon:
         for idx, config_file in enumerate(glob.glob("./snetd_configs/*.json")):
-            if run_ssl:
-                add_ssl_configs(config_file)
+            add_extra_configs(config_file)
             all_p.append(start_snetd(str(cwd), config_file))
     service_name = service_module.split(".")[-1]
     grpc_port = registry[service_name]["grpc"]

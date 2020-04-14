@@ -8,6 +8,8 @@ import subprocess
 import concurrent.futures as futures
 import sys
 from PIL import Image as PIL_Image
+import datetime
+import hashlib
 
 logging.basicConfig(
     level=10, format="%(asctime)s - [%(levelname)8s] - %(name)s - %(message)s"
@@ -28,10 +30,18 @@ class StyleTransferServicer(grpc_bt_grpc.StyleTransferServicer):
             os.makedirs(self.temp_dir)
         self.saveExt = 'jpg'
         self.output_image_prefix = "outputimage_"
-        # Store the names of the images to delete them afterwards
-        self.created_images = []
 
-    def treat_inputs(self, base_command, request, arguments):
+    @staticmethod
+    def generate_uid():
+        # Setting a hash accordingly to the timestamp
+        seed = "{}".format(datetime.datetime.now())
+        m = hashlib.sha256()
+        m.update(seed.encode("utf-8"))
+        m = m.hexdigest()
+        # Returns only the first and the last 10 hex
+        return m[:10] + m[-10:]
+
+    def treat_inputs(self, base_command, request, arguments, uid_images):
         """Treats gRPC inputs and assembles lua command. Specifically, checks if required field have been specified,
         if the values and types are correct and, for each input/input_type adds the argument to the lua command."""
 
@@ -47,19 +57,23 @@ class StyleTransferServicer(grpc_bt_grpc.StyleTransferServicer):
                 arg_value = eval("request.{}".format(field))
             except Exception as e:  # AttributeError if trying to access a field that hasn't been specified.
                 log.error(e)
-                return False
+                return ""
 
             # Deals with each field (or field type) separately. This is very specific to the lua command required.
             # If fields
             if field == "content":
                 assert(request.content != ""), "Content image path should not be empty."
-                image_path, content_file_index_str = service.treat_image_input(arg_value, self.temp_dir, "{}".format(field))
-                self.created_images.append(image_path)
+                image_path = service.treat_image_input(arg_value,
+                                                       self.temp_dir,
+                                                       "{}".format(field),
+                                                       uid_images)
                 command += "-{} {} ".format(field, image_path)
             elif field == "style":
                 assert (request.content != ""), "Style image path should not be empty."
-                image_path, style_file_index_str = service.treat_image_input(arg_value, self.temp_dir, "{}".format(field))
-                self.created_images.append(image_path)
+                image_path = service.treat_image_input(arg_value,
+                                                       self.temp_dir,
+                                                       "{}".format(field),
+                                                       uid_images)
                 command += "-{} {} ".format(field, image_path)
             elif field == "alpha":
                 if arg_value == 0.0:
@@ -69,10 +83,10 @@ class StyleTransferServicer(grpc_bt_grpc.StyleTransferServicer):
                         float_alpha = float(arg_value)
                     except Exception as e:
                         log.error(e)
-                        return False
+                        return ""
                     if float_alpha < 0.0 or float_alpha > 1.0:
                         log.error("Argument alpha should be a real number between 0 and 1.")
-                        return False
+                        return ""
                     command += "-{} {} ".format(field, str(round(float_alpha, 2)))
             elif field == "saveExt":
                 arg_value = arg_value.lower()
@@ -83,7 +97,7 @@ class StyleTransferServicer(grpc_bt_grpc.StyleTransferServicer):
                         command += "-{} {} ".format(field, arg_value)
                     else:
                         log.error("Field saveExt should either be jpg or png. Provided: {}.".format(arg_value))
-                        return False
+                        return ""
             else:
                 # If types
                 if var_type == "bool":
@@ -95,12 +109,7 @@ class StyleTransferServicer(grpc_bt_grpc.StyleTransferServicer):
                     except Exception as e:
                         log.error(e)
                     command += "-{} {} ".format(field, eval("request.{}".format(field)))
-        return command, content_file_index_str, style_file_index_str
-
-    def _exit_handler(self):
-        log.debug('Deleting temporary images before exiting.')
-        for image in self.created_images:
-            service.clear_file(image)
+        return command
 
     def transfer_image_style(self, request, context):
         """Python wrapper to AdaIN Style Transfer written in lua.
@@ -118,20 +127,36 @@ class StyleTransferServicer(grpc_bt_grpc.StyleTransferServicer):
                      "crop": ("bool", False, None),
                      "saveExt": ("string", False, "jpg")}
 
+        uid_images = self.generate_uid()
+
         # Treat inputs and assemble lua commands
         base_command = "th ./service/original-lua-code/test.lua "
-        command, content_file_index_str, style_file_index_str = self.treat_inputs(base_command, request, arguments)
+        command = self.treat_inputs(base_command, request, arguments, uid_images)
+        if not command:
+            error = "Error during command creation."
+            log.error(error)
+            context.set_details(error)
+            context.set_code(grpc.StatusCode.INTERNAL)
+            return Image(data=error)
+        
         command += "-{} {}".format("outputDir", self.temp_dir)  # pre-defined for the service
-
         log.debug("Lua command generated: {}".format(command))
+        
+        images_list = []
 
         # Initializing parameters to reduce image size if necessary
-        content_image_path = self.temp_dir + "contentimage_" + content_file_index_str + "." + self.saveExt
-        style_image_path = self.temp_dir + "styleimage_" + style_file_index_str + "." + self.saveExt
+        content_image_path = self.temp_dir + uid_images + "_content." + self.saveExt
+        style_image_path = self.temp_dir + uid_images + "_style." + self.saveExt
+        images_list.append(content_image_path)
+        images_list.append(style_image_path)
 
         # Get output file path
-        output_image_path = self.temp_dir + "contentimage_" + content_file_index_str \
-            + "_stylized_styleimage_" + style_file_index_str + "." + self.saveExt
+        output_image_path = "{}{}_content_stylized_{}_style.{}".format(self.temp_dir,
+                                                                       uid_images,
+                                                                       uid_images,
+                                                                       self.saveExt)
+        images_list.append(output_image_path)
+
         starting_quality = 95
         current_quality = starting_quality
         reduce_quality_to = 9 / 10  # of input quality
@@ -144,6 +169,7 @@ class StyleTransferServicer(grpc_bt_grpc.StyleTransferServicer):
         original_content_size = content_image.size
         content_image.close()
 
+        subprocess_error = ""
         for resize_attempts in range(1, number_of_attempts + 1):
             # Call style transfer (Lua)
             process = subprocess.Popen(command.split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -155,10 +181,10 @@ class StyleTransferServicer(grpc_bt_grpc.StyleTransferServicer):
 
             try:
                 output_image = PIL_Image.open(output_image_path)
-                self.created_images.append(output_image_path)
                 if resize_output_to_original:
                     output_image = output_image.resize(original_content_size, PIL_Image.ANTIALIAS)
                     output_image.save(output_image_path, quality=starting_quality)
+                    output_image.close()
                 break  # return output
             except Exception as e:  # TODO: how to identify?
                 log.error(str(e))
@@ -185,19 +211,23 @@ class StyleTransferServicer(grpc_bt_grpc.StyleTransferServicer):
                     round(1 - reduce_quality_to, 2)) + ".")
 
         if "out of memory".encode() in subprocess_error:
-            for image in self.created_images:
-                service.clear_file(image)
             error = subprocess_error.split(b"\n")[1]
             log.error(error)
-            raise Exception(error)
+            context.set_details(error.decode())
+            context.set_code(grpc.StatusCode.INTERNAL)
+            for p in images_list:
+                if os.path.exists(p):
+                    os.remove(p)
+            return Image(data="Out of Memory.")
 
         # Prepare gRPC output message
         self.result = Image()
         self.result.data = service.jpg_to_base64(output_image_path, open_file=True).decode("utf-8")
         log.debug("Output image generated. Service successfully completed.")
 
-        for image in self.created_images:
-            service.clear_file(image)
+        for p in images_list:
+            if os.path.exists(p):
+                os.remove(p)
 
         return self.result
 
