@@ -1,7 +1,7 @@
 {
     "blockchain_network_selected": "main",
     "burst_size": 1,
-    "daemon_end_point": "0.0.0.0:7018",
+    "daemon_end_point": "0.0.0.0:7032",
     "ipfs_end_point": "http://ipfs.singularitynet.io:80",
     "log": {
         "level": "debug",
