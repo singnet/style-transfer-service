@@ -23,6 +23,7 @@ jobs:
           docker-nvidia: true
           docker-volumes: "-v ~/singnet/.certs:/opt/singnet/.certs"
           daemon-version: ${CI_SNETD_VERSION}
+          infura-api-key: ${INFURA_API_KEY}
           daemon-pk: ${PK_STYLE_TRANSFER}
   testing:
     docker:
