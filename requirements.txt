@@ -1,4 +1,5 @@
-grpcio-tools==1.18.0
+grpcio==1.27.2
+grpcio-tools==1.27.2
 scikit-image==0.14.1
 easydict==1.9
-Pillow>=6.2.2
+Pillow==7.1.2

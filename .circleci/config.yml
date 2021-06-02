@@ -12,7 +12,7 @@ jobs:
       - ssh-deployment/deploy:
           ssh-host: ${SSH_HOST}
           ssh-user: ${SSH_USER}
-          mainnet-port: "7018"
+          mainnet-port: "7032"
           testnet-port: "7078"
           run-command: "python3 run_service.py --ssl"
           docker-test-files: "Dockerfile, requirements.txt"
