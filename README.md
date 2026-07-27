@@ -33,4 +33,4 @@ Please read our [guidelines](https://github.com/singnet/wiki/blob/master/guideli
 
 ## Licenses
 
-This project is licensed under the MIT License. The original repository is also licensed under the MIT License. See the [LICENSE](LICENSE) file for details. 
+This project is licensed under the Apache 2.0 License. The original repository is also licensed under the Apache 2.0 License. See the [LICENSE](LICENSE) file for details. 
