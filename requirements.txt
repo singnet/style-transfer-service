@@ -1,4 +1,4 @@
-grpcio==1.27.2
+grpcio==1.53.0
 grpcio-tools==1.27.2
 scikit-image==0.14.1
 easydict==1.9
